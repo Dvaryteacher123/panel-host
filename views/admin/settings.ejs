@@ -1,0 +1,882 @@
+<!--
+  DVARY HOSTING
+  FILE: views/admin/settings.ejs
+  Admin - System settings & Pterodactyl status
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --border-soft: rgba(139, 92, 246, 0.12);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+      --sidebar-w: 260px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.1), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 6, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .menu-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 1rem;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.4px;
+      display: none;
+    }
+
+    .admin-tag {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.35);
+      color: #f472b6;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 4px;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .user-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 6px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--border);
+      transition: 0.25s;
+    }
+
+    .user-btn:hover { border-color: var(--purple); }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .user-name { font-size: 0.83rem; font-weight: 700; display: none; }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #0d0820 0%, #100a26 100%);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .sidebar-logo .logo-mark { width: 36px; height: 36px; font-size: 1.05rem; }
+    .sidebar-logo .logo-text { display: block; font-weight: 800; font-size: 0.95rem; }
+
+    .sidebar-badge {
+      display: inline-block;
+      margin: 0 8px 12px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.15));
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      color: #f472b6;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      text-align: center;
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .nav-section {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 14px 10px 6px;
+      font-weight: 700;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .sidebar-link .icon { width: 20px; text-align: center; font-size: 1.05rem; }
+    .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); color: var(--purple-2); }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(236, 72, 153, 0.15));
+      color: #fff;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.2);
+    }
+
+    .sidebar-link.active::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      background: linear-gradient(180deg, var(--purple), var(--pink));
+      border-radius: 0 3px 3px 0;
+    }
+
+    .sidebar-footer { border-top: 1px solid var(--border-soft); padding-top: 10px; margin-top: 10px; }
+    .sidebar-footer .sidebar-link { color: #f87171; }
+    .sidebar-footer .sidebar-link:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 150;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+    }
+
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    .main {
+      position: relative;
+      z-index: 1;
+      padding: 20px 16px 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h1 {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .page-head h1 span {
+      background: linear-gradient(135deg, var(--purple-2), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .page-head p { color: var(--text-dim); font-size: 0.9rem; }
+
+    /* HEALTH BANNER */
+    .health-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      margin-bottom: 22px;
+      font-size: 0.88rem;
+      flex-wrap: wrap;
+    }
+
+    .health-online {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(34, 211, 238, 0.08));
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    .health-offline {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(245, 158, 11, 0.08));
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+
+    .health-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse 1.8s infinite;
+    }
+
+    .health-online .health-dot { background: #10b981; box-shadow: 0 0 12px #10b981; }
+    .health-offline .health-dot { background: #ef4444; box-shadow: 0 0 12px #ef4444; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .health-label {
+      flex: 1;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .health-label strong { font-weight: 800; }
+
+    /* SECTION CARD */
+    .section-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-soft);
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-head h2 .icon { font-size: 1.05rem; }
+
+    /* INFO LIST */
+    .info-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 13px;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      font-size: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .info-row .lbl {
+      color: var(--text-mute);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .info-row .vl {
+      color: var(--text);
+      font-weight: 700;
+      word-break: break-all;
+      text-align: right;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .info-row .vl.ok { color: #34d399; }
+    .info-row .vl.missing { color: #f87171; }
+    .info-row .vl.mono {
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 18px;
+      border-radius: 11px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      border: none;
+      cursor: pointer;
+      transition: 0.25s;
+      font-family: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 6px 22px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(139, 92, 246, 0.55);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--purple-2);
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .btn-full { width: 100%; }
+
+    /* NODES & NESTS GRID */
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .resource-item {
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .resource-item .lbl {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      font-weight: 700;
+    }
+
+    .resource-item .vl {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .resource-item .sub {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+    }
+
+    /* EMPTY MINI */
+    .empty-mini {
+      text-align: center;
+      padding: 20px 12px;
+      color: var(--text-mute);
+      font-size: 0.85rem;
+    }
+
+    .empty-mini .icon { font-size: 1.8rem; opacity: 0.5; display: block; margin-bottom: 8px; }
+
+    /* HINT CARD */
+    .hint-card {
+      background: linear-gradient(160deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.05));
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    .hint-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(139, 92, 246, 0.2);
+      display: grid;
+      place-items: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .hint-card strong { color: var(--purple-2); }
+
+    .hint-card code {
+      background: rgba(10, 6, 18, 0.7);
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: var(--purple-2);
+    }
+
+    /* TOASTS */
+    .toast-container {
+      position: fixed;
+      top: 74px;
+      right: 14px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 28px);
+    }
+
+    .toast {
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @media (min-width: 480px) {
+      .logo-text { display: block; }
+      .admin-tag { display: inline-flex; }
+      .user-name { display: block; }
+      .resource-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (min-width: 900px) {
+      .topbar { padding-left: calc(var(--sidebar-w) + 20px); }
+      .sidebar { transform: translateX(0); }
+      .menu-btn { display: none; }
+      .main { padding: 26px 30px 60px; margin-left: var(--sidebar-w); max-width: none; }
+      .overlay { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <% if (success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (warning && warning.length > 0) { %>
+    <div class="toast-container">
+      <% warning.forEach((msg) => { %>
+        <div class="toast warning"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">D</div>
+      <div class="logo-text">DVARY HOSTING</div>
+    </div>
+    <div class="sidebar-badge">🔑 Admin Panel</div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Usimamizi</div>
+
+      <a href="/admin/dashboard" class="sidebar-link">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a href="/admin/users" class="sidebar-link">
+        <span class="icon">👥</span> Users
+      </a>
+      <a href="/admin/bots" class="sidebar-link">
+        <span class="icon">🤖</span> Bots
+      </a>
+      <a href="/admin/deployments" class="sidebar-link">
+        <span class="icon">🚀</span> Deployments
+      </a>
+      <a href="/admin/servers" class="sidebar-link">
+        <span class="icon">🖥️</span> Servers
+      </a>
+
+      <div class="nav-section">Bidhaa</div>
+
+      <a href="/admin/hosting-plans" class="sidebar-link">
+        <span class="icon">📦</span> Hosting Plans
+      </a>
+      <a href="/admin/admin-panels" class="sidebar-link">
+        <span class="icon">🛡️</span> Admin Panels
+      </a>
+
+      <div class="nav-section">Fedha</div>
+
+      <a href="/admin/transactions" class="sidebar-link">
+        <span class="icon">💰</span> Transactions
+      </a>
+
+      <div class="nav-section">Mfumo</div>
+
+      <a href="/admin/settings" class="sidebar-link active">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/dashboard" class="sidebar-link">
+        <span class="icon">👤</span> User View
+      </a>
+      <a href="/auth/logout" class="sidebar-link">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+      <div class="logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+        <span class="admin-tag">🔑 Admin</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <a href="/dashboard/profile" class="user-btn">
+        <div class="user-avatar"><%= user.username.charAt(0) %></div>
+        <span class="user-name"><%= user.username %></span>
+      </a>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <div class="page-head">
+      <div>
+        <h1>System <span>Settings</span> ⚙️</h1>
+        <p>Hali ya mfumo, Pterodactyl API na taarifa za environment.</p>
+      </div>
+    </div>
+
+    <!-- PTERODACTYL HEALTH -->
+    <% if (pterodactylOnline) { %>
+      <div class="health-banner health-online">
+        <div class="health-dot"></div>
+        <div class="health-label">
+          <strong>Pterodactyl API:</strong> Inafanya kazi vizuri
+        </div>
+      </div>
+    <% } else { %>
+      <div class="health-banner health-offline">
+        <div class="health-dot"></div>
+        <div class="health-label">
+          <strong>Pterodactyl API:</strong>
+          <% if (pterodactylError) { %>
+            <%= pterodactylError %>
+          <% } else { %>
+            Haipatikani kwa sasa
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- PTERODACTYL TEST -->
+    <div class="section-card">
+      <div class="section-head">
+        <h2><span class="icon">🐉</span> Pterodactyl API</h2>
+      </div>
+
+      <div class="hint-card">
+        <div class="hint-icon">💡</div>
+        <div>
+          <strong>Kumbuka:</strong> Pterodactyl credentials zinatoka kwenye <code>.env</code> file
+          (<code>PTERODACTYL_URL</code> na <code>PTERODACTYL_API_KEY</code>). Hazibadiliki kwenye UI hii —
+          badilisha kwenye <code>.env</code> kisha restart server.
+        </div>
+      </div>
+
+      <form action="/admin/settings/test-pterodactyl" method="POST">
+        <button type="submit" class="btn btn-primary btn-full">
+          🔍 Test Pterodactyl Connection
+        </button>
+      </form>
+    </div>
+
+    <!-- ENV INFO -->
+    <div class="section-card">
+      <div class="section-head">
+        <h2><span class="icon">🔧</span> Environment</h2>
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <span class="lbl">🌍 NODE_ENV</span>
+          <span class="vl"><%= envInfo.nodeEnv %></span>
+        </div>
+        <div class="info-row">
+          <span class="lbl">🔌 PORT</span>
+          <span class="vl"><%= envInfo.port %></span>
+        </div>
+        <div class="info-row">
+          <span class="lbl">🗄️ MONGO_URI</span>
+          <span class="vl <%= envInfo.mongoUri === 'imewekwa' ? 'ok' : 'missing' %>">
+            <%= envInfo.mongoUri %>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="lbl">🐉 PTERODACTYL_URL</span>
+          <span class="vl <%= envInfo.pterodactylUrl === 'imewekwa' ? 'ok' : 'missing' %>">
+            <%= envInfo.pterodactylUrl %>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="lbl">🔑 PTERODACTYL_API_KEY</span>
+          <span class="vl <%= envInfo.pterodactylKey === 'imewekwa' ? 'ok' : 'missing' %>">
+            <%= envInfo.pterodactylKey %>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NODES -->
+    <div class="section-card">
+      <div class="section-head">
+        <h2><span class="icon">🖧</span> Pterodactyl Nodes (<%= nodes.length %>)</h2>
+      </div>
+
+      <% if (nodes && nodes.length > 0) { %>
+        <div class="resource-grid">
+          <% nodes.forEach((node) => { %>
+            <div class="resource-item">
+              <div class="lbl">Node</div>
+              <div class="vl"><%= node.name %></div>
+              <div class="sub">ID: <%= node.id %> • <%= node.fqdn || 'no-fqdn' %></div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty-mini">
+          <span class="icon">🖧</span>
+          Hakuna nodes zilizopatikana <% if (!pterodactylOnline) { %> (Pterodactyl haipatikani) <% } %>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- NESTS -->
+    <div class="section-card">
+      <div class="section-head">
+        <h2><span class="icon">🥚</span> Pterodactyl Nests (<%= nests.length %>)</h2>
+      </div>
+
+      <% if (nests && nests.length > 0) { %>
+        <div class="resource-grid">
+          <% nests.forEach((nest) => { %>
+            <div class="resource-item">
+              <div class="lbl">Nest</div>
+              <div class="vl"><%= nest.name %></div>
+              <div class="sub">ID: <%= nest.id %></div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty-mini">
+          <span class="icon">🥚</span>
+          Hakuna nests zilizopatikana <% if (!pterodactylOnline) { %> (Pterodactyl haipatikani) <% } %>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- IMPORTANT NOTE -->
+    <div class="hint-card">
+      <div class="hint-icon">ℹ️</div>
+      <div>
+        <strong>Kuhusu Pterodactyl Config:</strong>
+        <p style="margin-top: 4px;">
+          Node ID, Nest ID, Egg ID, Docker Image, na Startup Command zinawekwa kila moja kwa bots,
+          hosting plans, na admin panels. Hizi zinaingizwa wakati wa ku-add bidhaa husika.
+        </p>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) closeSidebar();
+    });
+  </script>
+</body>
+</html>
