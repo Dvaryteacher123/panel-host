@@ -1,0 +1,1114 @@
+<!--
+  DVARY HOSTING
+  FILE: views/admin/dashboard.ejs
+  Admin Dashboard - muhtasari wa mfumo mzima
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --border-soft: rgba(139, 92, 246, 0.12);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+      --sidebar-w: 260px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.1), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============== TOPBAR ============== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 6, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .menu-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 1rem;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.4px;
+      display: none;
+    }
+
+    .admin-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.35);
+      color: #f472b6;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 4px;
+      display: none;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .user-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 6px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--border);
+      transition: 0.25s;
+      cursor: pointer;
+    }
+
+    .user-btn:hover {
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.2);
+    }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .user-name {
+      font-size: 0.83rem;
+      font-weight: 700;
+      display: none;
+    }
+
+    /* ============== SIDEBAR ============== */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #0d0820 0%, #100a26 100%);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .sidebar-logo .logo-mark { width: 36px; height: 36px; font-size: 1.05rem; }
+    .sidebar-logo .logo-text { display: block; font-weight: 800; font-size: 0.95rem; }
+
+    .sidebar-badge {
+      display: inline-block;
+      margin: 0 8px 12px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.15));
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      color: #f472b6;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      text-align: center;
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .nav-section {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 14px 10px 6px;
+      font-weight: 700;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .sidebar-link .icon { width: 20px; text-align: center; font-size: 1.05rem; }
+    .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); color: var(--purple-2); }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(236, 72, 153, 0.15));
+      color: #fff;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.2);
+    }
+
+    .sidebar-link.active::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      background: linear-gradient(180deg, var(--purple), var(--pink));
+      border-radius: 0 3px 3px 0;
+    }
+
+    .sidebar-footer { border-top: 1px solid var(--border-soft); padding-top: 10px; margin-top: 10px; }
+    .sidebar-footer .sidebar-link { color: #f87171; }
+    .sidebar-footer .sidebar-link:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+
+    /* ============== OVERLAY ============== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 150;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+    }
+
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    /* ============== MAIN ============== */
+    .main {
+      position: relative;
+      z-index: 1;
+      padding: 20px 16px 40px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h1 {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .page-head h1 span {
+      background: linear-gradient(135deg, var(--purple-2), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .page-head p { color: var(--text-dim); font-size: 0.9rem; }
+
+    /* ============== HEALTH ============== */
+    .health-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      margin-bottom: 22px;
+      font-size: 0.88rem;
+      flex-wrap: wrap;
+    }
+
+    .health-online {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(34, 211, 238, 0.08));
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+
+    .health-offline {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(245, 158, 11, 0.08));
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+
+    .health-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse 1.8s infinite;
+    }
+
+    .health-online .health-dot { background: #10b981; box-shadow: 0 0 12px #10b981; }
+    .health-offline .health-dot { background: #ef4444; box-shadow: 0 0 12px #ef4444; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .health-label {
+      flex: 1;
+      font-weight: 600;
+    }
+
+    .health-label strong { font-weight: 800; }
+
+    /* ============== STATS ============== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 14px;
+      transition: 0.3s;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--purple), var(--pink));
+      opacity: 0.6;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 8px 22px rgba(139, 92, 246, 0.18);
+    }
+
+    .stat-card.gold::after { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .stat-card.green::after { background: linear-gradient(90deg, #10b981, #34d399); }
+    .stat-card.cyan::after { background: linear-gradient(90deg, #22d3ee, #67e8f9); }
+    .stat-card.pink::after { background: linear-gradient(90deg, #ec4899, #f472b6); }
+
+    .stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .stat-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+    }
+
+    .stat-card.gold .stat-icon { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); }
+    .stat-card.green .stat-icon { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); }
+    .stat-card.cyan .stat-icon { background: rgba(34, 211, 238, 0.15); border-color: rgba(34, 211, 238, 0.3); }
+    .stat-card.pink .stat-icon { background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.3); }
+
+    .stat-value {
+      font-size: clamp(1.15rem, 4vw, 1.6rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--purple-2), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-card.gold .stat-value {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat-card.green .stat-value {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat-card.cyan .stat-value {
+      background: linear-gradient(135deg, #67e8f9, #22d3ee);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat-card.pink .stat-value {
+      background: linear-gradient(135deg, #f472b6, #ec4899);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      font-weight: 700;
+    }
+
+    /* ============== QUICK ACTIONS ============== */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .quick-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 12px;
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: 0.25s;
+      text-decoration: none;
+    }
+
+    .quick-btn:hover {
+      transform: translateY(-3px);
+      border-color: rgba(139, 92, 246, 0.5);
+      background: linear-gradient(160deg, rgba(139, 92, 246, 0.12), rgba(236, 72, 153, 0.08));
+      box-shadow: 0 8px 22px rgba(139, 92, 246, 0.2);
+    }
+
+    .quick-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+    }
+
+    /* ============== SECTION CARDS ============== */
+    .sections-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .section-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-soft);
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-head h2 .icon { font-size: 1.05rem; }
+
+    .section-head a {
+      font-size: 0.8rem;
+      color: var(--purple-2);
+      font-weight: 700;
+    }
+
+    .section-head a:hover { color: var(--pink); }
+
+    /* ============== LIST ============== */
+    .list { display: flex; flex-direction: column; gap: 10px; }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(139, 92, 246, 0.04);
+      border: 1px solid var(--border-soft);
+      transition: 0.25s;
+    }
+
+    .list-item:hover {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: rgba(139, 92, 246, 0.3);
+      transform: translateX(3px);
+    }
+
+    .list-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15));
+      display: grid;
+      place-items: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+      font-weight: 800;
+      color: var(--purple-2);
+      text-transform: uppercase;
+    }
+
+    .list-body { flex: 1; min-width: 0; }
+
+    .list-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .list-sub { font-size: 0.74rem; color: var(--text-mute); }
+
+    .list-meta { text-align: right; flex-shrink: 0; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.66rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-failed  { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-info    { background: rgba(34, 211, 238, 0.15); color: #67e8f9; border: 1px solid rgba(34, 211, 238, 0.3); }
+    .badge-neutral { background: rgba(139, 92, 246, 0.15); color: var(--purple-2); border: 1px solid rgba(139, 92, 246, 0.3); }
+    .badge-admin { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+
+    .amount {
+      font-size: 0.85rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .amount.credit { color: #34d399; }
+    .amount.debit { color: #f87171; }
+
+    /* ============== EMPTY ============== */
+    .empty-mini {
+      text-align: center;
+      padding: 24px 12px;
+      color: var(--text-mute);
+      font-size: 0.85rem;
+    }
+
+    .empty-mini .icon { font-size: 1.8rem; opacity: 0.5; display: block; margin-bottom: 8px; }
+
+    /* ============== TOASTS ============== */
+    .toast-container {
+      position: fixed;
+      top: 74px;
+      right: 14px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 28px);
+    }
+
+    .toast {
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ============== RESPONSIVE ============== */
+    @media (min-width: 480px) {
+      .logo-text { display: block; }
+      .admin-tag { display: inline-flex; }
+      .user-name { display: block; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+      .quick-actions { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    @media (min-width: 700px) {
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    @media (min-width: 900px) {
+      .topbar { padding-left: calc(var(--sidebar-w) + 20px); }
+      .sidebar { transform: translateX(0); }
+      .menu-btn { display: none; }
+      .main { padding: 26px 30px 60px; margin-left: var(--sidebar-w); max-width: none; }
+      .overlay { display: none; }
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
+      .quick-actions { grid-template-columns: repeat(4, 1fr); }
+      .sections-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============== TOASTS ============== -->
+  <% if (success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (warning && warning.length > 0) { %>
+    <div class="toast-container">
+      <% warning.forEach((msg) => { %>
+        <div class="toast warning"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- ============== OVERLAY ============== -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">D</div>
+      <div class="logo-text">DVARY HOSTING</div>
+    </div>
+    <div class="sidebar-badge">🔑 Admin Panel</div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Usimamizi</div>
+
+      <a href="/admin/dashboard" class="sidebar-link active">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a href="/admin/users" class="sidebar-link">
+        <span class="icon">👥</span> Users
+      </a>
+      <a href="/admin/bots" class="sidebar-link">
+        <span class="icon">🤖</span> Bots
+      </a>
+      <a href="/admin/deployments" class="sidebar-link">
+        <span class="icon">🚀</span> Deployments
+      </a>
+      <a href="/admin/servers" class="sidebar-link">
+        <span class="icon">🖥️</span> Servers
+      </a>
+
+      <div class="nav-section">Bidhaa</div>
+
+      <a href="/admin/hosting-plans" class="sidebar-link">
+        <span class="icon">📦</span> Hosting Plans
+      </a>
+      <a href="/admin/admin-panels" class="sidebar-link">
+        <span class="icon">🛡️</span> Admin Panels
+      </a>
+
+      <div class="nav-section">Fedha</div>
+
+      <a href="/admin/transactions" class="sidebar-link">
+        <span class="icon">💰</span> Transactions
+      </a>
+
+      <div class="nav-section">Mfumo</div>
+
+      <a href="/admin/settings" class="sidebar-link">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/dashboard" class="sidebar-link">
+        <span class="icon">👤</span> User View
+      </a>
+      <a href="/auth/logout" class="sidebar-link">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============== TOPBAR ============== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+      <div class="logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+        <span class="admin-tag">🔑 Admin</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <a href="/dashboard/profile" class="user-btn">
+        <div class="user-avatar"><%= user.username.charAt(0) %></div>
+        <span class="user-name"><%= user.username %></span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+
+    <div class="page-head">
+      <div>
+        <h1>Admin <span>Dashboard</span> 📊</h1>
+        <p>Muhtasari wa mfumo mzima wa DVARY HOSTING.</p>
+      </div>
+    </div>
+
+    <!-- PTERODACTYL HEALTH -->
+    <% if (pterodactylOnline) { %>
+      <div class="health-banner health-online">
+        <div class="health-dot"></div>
+        <div class="health-label">
+          <strong>Pterodactyl API:</strong> Inafanya kazi vizuri
+        </div>
+        <a href="/admin/settings" class="btn-ghost" style="font-size: 0.8rem; color: inherit;">Angalia →</a>
+      </div>
+    <% } else { %>
+      <div class="health-banner health-offline">
+        <div class="health-dot"></div>
+        <div class="health-label">
+          <strong>Pterodactyl API:</strong>
+          <% if (pterodactylError) { %>
+            <%= pterodactylError %>
+          <% } else { %>
+            Haipatikani kwa sasa
+          <% } %>
+        </div>
+        <a href="/admin/settings" style="font-size: 0.8rem; color: inherit; text-decoration: underline;">Angalia Settings →</a>
+      </div>
+    <% } %>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon">👥</div>
+        </div>
+        <div class="stat-value"><%= stats.users %></div>
+        <div class="stat-label">Users</div>
+      </div>
+
+      <div class="stat-card green">
+        <div class="stat-top">
+          <div class="stat-icon">🤖</div>
+        </div>
+        <div class="stat-value"><%= stats.bots %></div>
+        <div class="stat-label">Bots</div>
+      </div>
+
+      <div class="stat-card cyan">
+        <div class="stat-top">
+          <div class="stat-icon">🚀</div>
+        </div>
+        <div class="stat-value"><%= stats.deployments %></div>
+        <div class="stat-label">Deployments</div>
+      </div>
+
+      <div class="stat-card pink">
+        <div class="stat-top">
+          <div class="stat-icon">🖥️</div>
+        </div>
+        <div class="stat-value"><%= stats.servers %></div>
+        <div class="stat-label">Servers</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon">📦</div>
+        </div>
+        <div class="stat-value"><%= stats.plans %></div>
+        <div class="stat-label">Hosting Plans</div>
+      </div>
+
+      <div class="stat-card green">
+        <div class="stat-top">
+          <div class="stat-icon">🛡️</div>
+        </div>
+        <div class="stat-value"><%= stats.panels %></div>
+        <div class="stat-label">Admin Panels</div>
+      </div>
+
+      <div class="stat-card gold">
+        <div class="stat-top">
+          <div class="stat-icon">💰</div>
+        </div>
+        <div class="stat-value"><%= stats.transactions %></div>
+        <div class="stat-label">Transactions</div>
+      </div>
+
+      <div class="stat-card green">
+        <div class="stat-top">
+          <div class="stat-icon">✅</div>
+        </div>
+        <div class="stat-value"><%= stats.activeServers %></div>
+        <div class="stat-label">Active Servers</div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="quick-actions">
+      <a href="/admin/bots/add" class="quick-btn">
+        <div class="quick-icon">➕</div>
+        <span>Add Bot</span>
+      </a>
+      <a href="/admin/hosting-plans/add" class="quick-btn">
+        <div class="quick-icon">📦</div>
+        <span>Add Plan</span>
+      </a>
+      <a href="/admin/admin-panels/add" class="quick-btn">
+        <div class="quick-icon">🛡️</div>
+        <span>Add Panel</span>
+      </a>
+      <a href="/admin/users" class="quick-btn">
+        <div class="quick-icon">💰</div>
+        <span>Manage Coins</span>
+      </a>
+    </div>
+
+    <!-- SECTIONS -->
+    <div class="sections-grid">
+
+      <!-- RECENT USERS -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">👥</span> Users wa Hivi Karibuni</h2>
+          <a href="/admin/users">Ona zote →</a>
+        </div>
+
+        <% if (recentUsers && recentUsers.length > 0) { %>
+          <div class="list">
+            <% recentUsers.forEach((u) => { %>
+              <a href="/admin/users/<%= u._id %>" class="list-item">
+                <div class="list-icon"><%= u.username.charAt(0) %></div>
+                <div class="list-body">
+                  <div class="list-title"><%= u.username %></div>
+                  <div class="list-sub"><%= u.email %></div>
+                </div>
+                <div class="list-meta">
+                  <% if (u.role === 'admin') { %>
+                    <span class="badge badge-admin">Admin</span>
+                  <% } else { %>
+                    <span class="badge badge-neutral">User</span>
+                  <% } %>
+                </div>
+              </a>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="empty-mini">
+            <span class="icon">👥</span>
+            Hakuna users bado
+          </div>
+        <% } %>
+      </div>
+
+      <!-- RECENT DEPLOYMENTS -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">🚀</span> Deployments za Hivi Karibuni</h2>
+          <a href="/admin/deployments">Ona zote →</a>
+        </div>
+
+        <% if (recentDeployments && recentDeployments.length > 0) { %>
+          <div class="list">
+            <% recentDeployments.forEach((d) => { %>
+              <div class="list-item">
+                <div class="list-icon">🤖</div>
+                <div class="list-body">
+                  <div class="list-title"><%= d.botName %></div>
+                  <div class="list-sub">
+                    <%= d.user && d.user.username ? d.user.username : 'unknown' %>
+                    • <%= new Date(d.createdAt).toLocaleDateString('sw-TZ', { day: '2-digit', month: 'short' }) %>
+                  </div>
+                </div>
+                <div class="list-meta">
+                  <% if (d.status === 'success') { %>
+                    <span class="badge badge-success">Success</span>
+                  <% } else if (d.status === 'failed') { %>
+                    <span class="badge badge-failed">Failed</span>
+                  <% } else { %>
+                    <span class="badge badge-pending"><%= d.status %></span>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="empty-mini">
+            <span class="icon">🚀</span>
+            Hakuna deployments bado
+          </div>
+        <% } %>
+      </div>
+
+      <!-- RECENT SERVERS -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">🖥️</span> Servers za Hivi Karibuni</h2>
+          <a href="/admin/servers">Ona zote →</a>
+        </div>
+
+        <% if (recentServers && recentServers.length > 0) { %>
+          <div class="list">
+            <% recentServers.forEach((s) => { %>
+              <div class="list-item">
+                <div class="list-icon">🖥️</div>
+                <div class="list-body">
+                  <div class="list-title"><%= s.name %></div>
+                  <div class="list-sub">
+                    <%= s.user && s.user.username ? s.user.username : 'unknown' %>
+                    • <%= s.ram %>MB / <%= s.cpu %>%
+                  </div>
+                </div>
+                <div class="list-meta">
+                  <% if (s.status === 'active') { %>
+                    <span class="badge badge-success">Active</span>
+                  <% } else if (s.status === 'suspended') { %>
+                    <span class="badge badge-pending">Susp</span>
+                  <% } else if (s.status === 'failed') { %>
+                    <span class="badge badge-failed">Failed</span>
+                  <% } else { %>
+                    <span class="badge badge-info"><%= s.status %></span>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="empty-mini">
+            <span class="icon">🖥️</span>
+            Hakuna servers bado
+          </div>
+        <% } %>
+      </div>
+
+      <!-- RECENT TRANSACTIONS -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">💰</span> Transactions za Hivi Karibuni</h2>
+          <a href="/admin/transactions">Ona zote →</a>
+        </div>
+
+        <% if (recentTransactions && recentTransactions.length > 0) { %>
+          <div class="list">
+            <% recentTransactions.forEach((t) => { %>
+              <div class="list-item">
+                <div class="list-icon"><%= t.type === 'credit' ? '📥' : '📤' %></div>
+                <div class="list-body">
+                  <div class="list-title"><%= t.description || t.reason %></div>
+                  <div class="list-sub">
+                    <%= t.user && t.user.username ? t.user.username : 'unknown' %>
+                  </div>
+                </div>
+                <div class="list-meta">
+                  <div class="amount <%= t.type === 'credit' ? 'credit' : 'debit' %>">
+                    <%= t.type === 'credit' ? '+' : '-' %><%= t.amount %>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="empty-mini">
+            <span class="icon">💰</span>
+            Hakuna transactions bado
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) closeSidebar();
+    });
+  </script>
+</body>
+</html>
