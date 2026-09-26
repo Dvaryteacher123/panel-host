@@ -1,0 +1,288 @@
+<!--
+  DVARY HOSTING
+  FILE: views/404.ejs
+  404 & Error page - inatumika kwa 404, 403, 500 na errors nyingine
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title || '404 - Haipatikani' %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.18), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.14), transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.06), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============== WRAPPER ============== */
+    .error-wrap {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 30px 20px;
+    }
+
+    .error-card {
+      max-width: 560px;
+      width: 100%;
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 28px;
+      text-align: center;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6), 0 0 50px rgba(139, 92, 246, 0.12);
+      animation: fadeUp 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .error-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--purple), var(--pink), var(--cyan));
+      opacity: 0.85;
+    }
+
+    /* ============== LOGO ============== */
+    .error-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      letter-spacing: 0.4px;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1.1rem;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.55);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* ============== ERROR CODE ============== */
+    .error-icon {
+      font-size: 4rem;
+      margin-bottom: 10px;
+      animation: float 3s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .error-code {
+      font-size: clamp(3rem, 14vw, 5rem);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--purple-2), var(--pink), var(--cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 12px;
+      text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+    }
+
+    .error-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+
+    .error-message {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+      max-width: 440px;
+      margin: 0 auto 26px;
+    }
+
+    /* ============== ACTIONS ============== */
+    .error-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 22px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      border: none;
+      cursor: pointer;
+      transition: 0.25s;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 6px 22px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(139, 92, 246, 0.55);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--purple-2);
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    /* ============== FOOTER ============== */
+    .error-footer {
+      font-size: 0.78rem;
+      color: var(--text-mute);
+      padding-top: 20px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .error-footer strong { color: var(--purple-2); }
+
+    /* ============== RESPONSIVE ============== */
+    @media (min-width: 480px) {
+      .error-card { padding: 50px 40px; }
+      .error-actions { flex-direction: row; }
+      .error-icon { font-size: 4.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="error-wrap">
+    <div class="error-card">
+
+      <a href="/" class="error-logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+      </a>
+
+      <% 
+        // Chagua icon na maandishi kulingana na status ya error
+        let icon = '🔍';
+        let code = '404';
+        let titleText = 'Ukurasa Haupatikani';
+        let messageText = message || 'Ukurasa uliojaribu kufikia haupo. Huenda umefutwa au una URL si sahihi.';
+
+        if (title && title.includes('403')) {
+          icon = '🚫';
+          code = '403';
+          titleText = 'Hakuna Ruhusa';
+        } else if (title && title.includes('500')) {
+          icon = '⚠️';
+          code = '500';
+          titleText = 'Hitilafu ya Server';
+        } else if (title && title.includes('429')) {
+          icon = '⏱️';
+          code = '429';
+          titleText = 'Maombi Mengi Mno';
+        } else if (title && (title.includes('Error') || title.includes('error'))) {
+          icon = '⚠️';
+          code = 'Error';
+          titleText = 'Hitilafu Imetokea';
+        }
+      %>
+
+      <div class="error-icon"><%= icon %></div>
+      <div class="error-code"><%= code %></div>
+      <h1 class="error-title"><%= titleText %></h1>
+      <p class="error-message"><%= messageText %></p>
+
+      <div class="error-actions">
+        <a href="/" class="btn btn-primary">🏠 Nyumbani</a>
+
+        <% if (currentUser) { %>
+          <a href="/dashboard" class="btn btn-ghost">📊 Dashboard</a>
+        <% } else { %>
+          <a href="/auth/login" class="btn btn-ghost">🔑 Ingia</a>
+        <% } %>
+      </div>
+
+      <div class="error-footer">
+        &copy; <%= new Date().getFullYear() %> <strong>DVARY HOSTING</strong> — Kama tatizo linaendelea, wasiliana na admin.
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
