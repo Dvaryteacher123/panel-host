@@ -1,0 +1,1277 @@
+<!--
+  DVARY HOSTING
+  FILE: views/admin/user-details.ejs
+  Admin - User details, actions (status, role, coins)
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --border-soft: rgba(139, 92, 246, 0.12);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+      --sidebar-w: 260px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.1), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============== TOPBAR ============== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 6, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .menu-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 1rem;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.4px;
+      display: none;
+    }
+
+    .admin-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.35);
+      color: #f472b6;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 4px;
+      display: none;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .user-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 6px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--border);
+      transition: 0.25s;
+    }
+
+    .user-btn:hover { border-color: var(--purple); }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .user-name { font-size: 0.83rem; font-weight: 700; display: none; }
+
+    /* ============== SIDEBAR ============== */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #0d0820 0%, #100a26 100%);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .sidebar-logo .logo-mark { width: 36px; height: 36px; font-size: 1.05rem; }
+    .sidebar-logo .logo-text { display: block; font-weight: 800; font-size: 0.95rem; }
+
+    .sidebar-badge {
+      display: inline-block;
+      margin: 0 8px 12px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.15));
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      color: #f472b6;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      text-align: center;
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .nav-section {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 14px 10px 6px;
+      font-weight: 700;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .sidebar-link .icon { width: 20px; text-align: center; font-size: 1.05rem; }
+    .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); color: var(--purple-2); }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(236, 72, 153, 0.15));
+      color: #fff;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.2);
+    }
+
+    .sidebar-link.active::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      background: linear-gradient(180deg, var(--purple), var(--pink));
+      border-radius: 0 3px 3px 0;
+    }
+
+    .sidebar-footer { border-top: 1px solid var(--border-soft); padding-top: 10px; margin-top: 10px; }
+    .sidebar-footer .sidebar-link { color: #f87171; }
+    .sidebar-footer .sidebar-link:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+
+    /* ============== OVERLAY ============== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 150;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+    }
+
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    /* ============== MAIN ============== */
+    .main {
+      position: relative;
+      z-index: 1;
+      padding: 20px 16px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .breadcrumbs {
+      font-size: 0.82rem;
+      color: var(--text-mute);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumbs a { color: var(--text-dim); transition: 0.2s; }
+    .breadcrumbs a:hover { color: var(--purple-2); }
+    .breadcrumbs .sep { opacity: 0.5; }
+    .breadcrumbs .current { color: var(--purple-2); font-weight: 600; }
+
+    /* ============== USER HERO ============== */
+    .user-hero {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.1));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 20px;
+      margin-bottom: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .user-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.15), transparent 60%);
+      animation: rotate 25s linear infinite;
+      z-index: 0;
+    }
+
+    .user-hero > * { position: relative; z-index: 1; }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .hero-avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 2rem;
+      text-transform: uppercase;
+      border: 3px solid rgba(139, 92, 246, 0.5);
+      box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+    }
+
+    .hero-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      word-break: break-word;
+    }
+
+    .hero-email {
+      font-size: 0.87rem;
+      color: var(--text-dim);
+      word-break: break-all;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.68rem;
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .badge-admin { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.35); }
+    .badge-user  { background: rgba(139, 92, 246, 0.15); color: var(--purple-2); border: 1px solid rgba(139, 92, 246, 0.35); }
+    .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .badge-suspended { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .badge-banned { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+    .badge-gold { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-failed  { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-info    { background: rgba(34, 211, 238, 0.15); color: #67e8f9; border: 1px solid rgba(34, 211, 238, 0.3); }
+    .badge-neutral { background: rgba(139, 92, 246, 0.15); color: var(--purple-2); border: 1px solid rgba(139, 92, 246, 0.3); }
+
+    /* ============== GRID ============== */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .section-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-soft);
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-head h2 .icon { font-size: 1.05rem; }
+
+    /* ============== INFO ROW ============== */
+    .info-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 13px;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      font-size: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .info-row .lbl {
+      color: var(--text-mute);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .info-row .vl {
+      color: var(--text);
+      font-weight: 700;
+      word-break: break-all;
+      text-align: right;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .info-row .vl.gold {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* ============== ACTION FORMS ============== */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .action-box {
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid var(--border-soft);
+    }
+
+    .action-box h3 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-box .hint {
+      font-size: 0.75rem;
+      color: var(--text-mute);
+      margin-bottom: 10px;
+      line-height: 1.55;
+    }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group:last-of-type { margin-bottom: 12px; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .input, .select, .textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 9px;
+      background: rgba(10, 6, 18, 0.6);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-family: inherit;
+      transition: 0.25s;
+      outline: none;
+    }
+
+    .textarea {
+      resize: vertical;
+      min-height: 70px;
+      line-height: 1.5;
+    }
+
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+      background: rgba(10, 6, 18, 0.85);
+    }
+
+    .input::placeholder, .textarea::placeholder { color: var(--text-mute); }
+
+    .select option { background: var(--card-2); color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.84rem;
+      border: none;
+      cursor: pointer;
+      transition: 0.25s;
+      font-family: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-success:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--purple-2);
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    /* ============== LIST ============== */
+    .list { display: flex; flex-direction: column; gap: 10px; }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(139, 92, 246, 0.04);
+      border: 1px solid var(--border-soft);
+      transition: 0.25s;
+    }
+
+    .list-item:hover {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: rgba(139, 92, 246, 0.3);
+      transform: translateX(3px);
+    }
+
+    .list-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15));
+      display: grid;
+      place-items: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+      font-weight: 800;
+      color: var(--purple-2);
+    }
+
+    .list-body { flex: 1; min-width: 0; }
+
+    .list-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .list-sub { font-size: 0.74rem; color: var(--text-mute); }
+
+    .list-meta { text-align: right; flex-shrink: 0; }
+
+    .amount {
+      font-size: 0.85rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .amount.credit { color: #34d399; }
+    .amount.debit  { color: #f87171; }
+
+    /* ============== SUMMARY MINI ============== */
+    .summary-mini {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .mini-card {
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid var(--border-soft);
+      text-align: center;
+    }
+
+    .mini-label {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .mini-value {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .mini-value.credit { color: #34d399; }
+    .mini-value.debit { color: #f87171; }
+
+    /* ============== EMPTY ============== */
+    .empty-mini {
+      text-align: center;
+      padding: 24px 12px;
+      color: var(--text-mute);
+      font-size: 0.85rem;
+    }
+
+    .empty-mini .icon { font-size: 1.8rem; opacity: 0.5; display: block; margin-bottom: 8px; }
+
+    /* ============== TOASTS ============== */
+    .toast-container {
+      position: fixed;
+      top: 74px;
+      right: 14px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 28px);
+    }
+
+    .toast {
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ============== RESPONSIVE ============== */
+    @media (min-width: 480px) {
+      .logo-text { display: block; }
+      .admin-tag { display: inline-flex; }
+      .user-name { display: block; }
+      .user-hero { flex-direction: row; text-align: left; }
+      .hero-meta { justify-content: flex-start; }
+      .action-grid { grid-template-columns: repeat(2, 1fr); }
+      .summary-mini { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 900px) {
+      .topbar { padding-left: calc(var(--sidebar-w) + 20px); }
+      .sidebar { transform: translateX(0); }
+      .menu-btn { display: none; }
+      .main { padding: 26px 30px 60px; margin-left: var(--sidebar-w); max-width: none; }
+      .overlay { display: none; }
+      .grid { grid-template-columns: 1fr 1fr; }
+      .grid-full { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============== TOASTS ============== -->
+  <% if (success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (warning && warning.length > 0) { %>
+    <div class="toast-container">
+      <% warning.forEach((msg) => { %>
+        <div class="toast warning"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- ============== OVERLAY ============== -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">D</div>
+      <div class="logo-text">DVARY HOSTING</div>
+    </div>
+    <div class="sidebar-badge">🔑 Admin Panel</div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Usimamizi</div>
+
+      <a href="/admin/dashboard" class="sidebar-link">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a href="/admin/users" class="sidebar-link active">
+        <span class="icon">👥</span> Users
+      </a>
+      <a href="/admin/bots" class="sidebar-link">
+        <span class="icon">🤖</span> Bots
+      </a>
+      <a href="/admin/deployments" class="sidebar-link">
+        <span class="icon">🚀</span> Deployments
+      </a>
+      <a href="/admin/servers" class="sidebar-link">
+        <span class="icon">🖥️</span> Servers
+      </a>
+
+      <div class="nav-section">Bidhaa</div>
+
+      <a href="/admin/hosting-plans" class="sidebar-link">
+        <span class="icon">📦</span> Hosting Plans
+      </a>
+      <a href="/admin/admin-panels" class="sidebar-link">
+        <span class="icon">🛡️</span> Admin Panels
+      </a>
+
+      <div class="nav-section">Fedha</div>
+
+      <a href="/admin/transactions" class="sidebar-link">
+        <span class="icon">💰</span> Transactions
+      </a>
+
+      <div class="nav-section">Mfumo</div>
+
+      <a href="/admin/settings" class="sidebar-link">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/dashboard" class="sidebar-link">
+        <span class="icon">👤</span> User View
+      </a>
+      <a href="/auth/logout" class="sidebar-link">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============== TOPBAR ============== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+      <div class="logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+        <span class="admin-tag">🔑 Admin</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <a href="/dashboard/profile" class="user-btn">
+        <div class="user-avatar"><%= user.username.charAt(0) %></div>
+        <span class="user-name"><%= user.username %></span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+
+    <!-- BREADCRUMBS -->
+    <div class="breadcrumbs">
+      <a href="/admin/dashboard">Dashboard</a>
+      <span class="sep">/</span>
+      <a href="/admin/users">Users</a>
+      <span class="sep">/</span>
+      <span class="current"><%= targetUser.username %></span>
+    </div>
+
+    <!-- USER HERO -->
+    <div class="user-hero">
+      <div class="hero-avatar"><%= targetUser.username.charAt(0) %></div>
+      <div style="flex: 1; min-width: 0;">
+        <div class="hero-name"><%= targetUser.username %></div>
+        <div class="hero-email"><%= targetUser.email %></div>
+        <div class="hero-meta">
+          <% if (targetUser.role === 'admin') { %>
+            <span class="badge badge-admin">🔑 Admin</span>
+          <% } else { %>
+            <span class="badge badge-user">👤 User</span>
+          <% } %>
+
+          <% if (targetUser.status === 'active') { %>
+            <span class="badge badge-active">✅ Active</span>
+          <% } else if (targetUser.status === 'suspended') { %>
+            <span class="badge badge-suspended">⏸️ Suspended</span>
+          <% } else if (targetUser.status === 'banned') { %>
+            <span class="badge badge-banned">🚫 Banned</span>
+          <% } %>
+
+          <span class="badge badge-gold">🪙 <%= targetUser.coins %> coins</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- ACCOUNT INFO -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">ℹ️</span> Taarifa za Akaunti</h2>
+        </div>
+
+        <div class="info-list">
+          <div class="info-row">
+            <span class="lbl">🆔 User ID</span>
+            <span class="vl" style="font-family: monospace; font-size: 0.75rem;"><%= targetUser._id %></span>
+          </div>
+          <div class="info-row">
+            <span class="lbl">👤 Username</span>
+            <span class="vl"><%= targetUser.username %></span>
+          </div>
+          <div class="info-row">
+            <span class="lbl">📧 Email</span>
+            <span class="vl"><%= targetUser.email %></span>
+          </div>
+          <div class="info-row">
+            <span class="lbl">🪙 Coins</span>
+            <span class="vl gold"><%= targetUser.coins %></span>
+          </div>
+          <% if (targetUser.phone) { %>
+            <div class="info-row">
+              <span class="lbl">📱 Simu</span>
+              <span class="vl"><%= targetUser.phone %></span>
+            </div>
+          <% } %>
+          <% if (targetUser.country) { %>
+            <div class="info-row">
+              <span class="lbl">🌍 Nchi</span>
+              <span class="vl"><%= targetUser.country %></span>
+            </div>
+          <% } %>
+          <% if (targetUser.pterodactylUserId) { %>
+            <div class="info-row">
+              <span class="lbl">🐉 Pterodactyl</span>
+              <span class="vl">ID: <%= targetUser.pterodactylUserId %> (<%= targetUser.pterodactylUsername %>)</span>
+            </div>
+          <% } %>
+          <div class="info-row">
+            <span class="lbl">📅 Amejiunga</span>
+            <span class="vl">
+              <%= new Date(targetUser.createdAt).toLocaleDateString('sw-TZ', { day: '2-digit', month: 'long', year: 'numeric' }) %>
+            </span>
+          </div>
+          <% if (targetUser.lastLogin) { %>
+            <div class="info-row">
+              <span class="lbl">🕐 Login ya Mwisho</span>
+              <span class="vl">
+                <%= new Date(targetUser.lastLogin).toLocaleString('sw-TZ', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+              </span>
+            </div>
+          <% } %>
+          <% if (targetUser.lastLoginIp) { %>
+            <div class="info-row">
+              <span class="lbl">🌐 IP ya Mwisho</span>
+              <span class="vl" style="font-family: monospace; font-size: 0.78rem;"><%= targetUser.lastLoginIp %></span>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- FINANCIAL SUMMARY -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">💰</span> Muhtasari wa Fedha</h2>
+          <a href="/admin/transactions" style="font-size: 0.78rem; color: var(--purple-2); font-weight: 700;">Transactions →</a>
+        </div>
+
+        <div class="summary-mini" style="margin-bottom: 14px;">
+          <div class="mini-card">
+            <div class="mini-label">Coins Zilizoingia</div>
+            <div class="mini-value credit">+<%= summary.totalCredits %></div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Coins Zilizotoka</div>
+            <div class="mini-value debit">-<%= summary.totalDebits %></div>
+          </div>
+        </div>
+
+        <!-- COIN ACTIONS -->
+        <div class="action-grid">
+          <div class="action-box">
+            <h3>➕ Ongeza Coins</h3>
+            <form action="/admin/coins/add" method="POST">
+              <input type="hidden" name="userId" value="<%= targetUser._id %>" />
+              <input type="hidden" name="redirectTo" value="/admin/users/<%= targetUser._id %>" />
+
+              <div class="form-group">
+                <label for="addAmount">Kiasi</label>
+                <input
+                  type="number"
+                  id="addAmount"
+                  name="amount"
+                  class="input"
+                  placeholder="mfano: 100"
+                  min="1"
+                  step="1"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="addDescription">Maelezo (optional)</label>
+                <input
+                  type="text"
+                  id="addDescription"
+                  name="description"
+                  class="input"
+                  placeholder="Sababu ya kuongeza"
+                  maxlength="300"
+                />
+              </div>
+
+              <button type="submit" class="btn btn-success">➕ Ongeza Coins</button>
+            </form>
+          </div>
+
+          <div class="action-box">
+            <h3>➖ Ondoa Coins</h3>
+            <form action="/admin/coins/remove" method="POST" onsubmit="return confirm('Una uhakika unataka kuondoa coins kwa user huyu?');">
+              <input type="hidden" name="userId" value="<%= targetUser._id %>" />
+              <input type="hidden" name="redirectTo" value="/admin/users/<%= targetUser._id %>" />
+
+              <div class="form-group">
+                <label for="removeAmount">Kiasi</label>
+                <input
+                  type="number"
+                  id="removeAmount"
+                  name="amount"
+                  class="input"
+                  placeholder="mfano: 50"
+                  min="1"
+                  step="1"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="removeDescription">Maelezo (optional)</label>
+                <input
+                  type="text"
+                  id="removeDescription"
+                  name="description"
+                  class="input"
+                  placeholder="Sababu ya kuondoa"
+                  maxlength="300"
+                />
+              </div>
+
+              <button type="submit" class="btn btn-danger">➖ Ondoa Coins</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS & ROLE -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">⚙️</span> Status & Role</h2>
+        </div>
+
+        <div class="action-grid">
+          <div class="action-box">
+            <h3>📊 Badilisha Status</h3>
+            <p class="hint">Status inaathiri uwezo wa user kuingia (login) mfumo.</p>
+
+            <form action="/admin/users/<%= targetUser._id %>/status" method="POST">
+              <div class="form-group">
+                <label for="status">Status Mpya</label>
+                <select name="status" id="status" class="select" required>
+                  <option value="active" <%= targetUser.status === 'active' ? 'selected' : '' %>>✅ Active</option>
+                  <option value="suspended" <%= targetUser.status === 'suspended' ? 'selected' : '' %>>⏸️ Suspended</option>
+                  <option value="banned" <%= targetUser.status === 'banned' ? 'selected' : '' %>>🚫 Banned</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary">💾 Hifadhi Status</button>
+            </form>
+          </div>
+
+          <div class="action-box">
+            <h3>🎭 Badilisha Role</h3>
+            <p class="hint">
+              Admin anaweza kufikia panel ya admin. Kuwa makini kubadilisha hii.
+              <% if (targetUser._id.toString() === user._id.toString()) { %>
+                <br /><strong style="color: #f87171;">Hauwezi kubadilisha role yako mwenyewe.</strong>
+              <% } %>
+            </p>
+
+            <form action="/admin/users/<%= targetUser._id %>/role" method="POST">
+              <div class="form-group">
+                <label for="role">Role Mpya</label>
+                <select
+                  name="role"
+                  id="role"
+                  class="select"
+                  required
+                  <%= targetUser._id.toString() === user._id.toString() ? 'disabled' : '' %>
+                >
+                  <option value="user" <%= targetUser.role === 'user' ? 'selected' : '' %>>👤 User</option>
+                  <option value="admin" <%= targetUser.role === 'admin' ? 'selected' : '' %>>🔑 Admin</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                class="btn btn-primary"
+                <%= targetUser._id.toString() === user._id.toString() ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' %>
+              >
+                💾 Hifadhi Role
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT SERVERS -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">🖥️</span> Servers za Hivi Karibuni</h2>
+          <a href="/admin/servers" style="font-size: 0.78rem; color: var(--purple-2); font-weight: 700;">Ona zote →</a>
+        </div>
+
+        <% if (servers && servers.length > 0) { %>
+          <div class="list">
+            <% servers.forEach((s) => { %>
+              <div class="list-item">
+                <div class="list-icon">🖥️</div>
+                <div class="list-body">
+                  <div class="list-title"><%= s.name %></div>
+                  <div class="list-sub">
+                    <%= s.ram %>MB / <%= s.cpu %>% • <%= s.source %>
+                  </div>
+                </div>
+                <div class="list-meta">
+                  <% if (s.status === 'active') { %>
+                    <span class="badge badge-success">Active</span>
+                  <% } else if (s.status === 'suspended') { %>
+                    <span class="badge badge-pending">Susp</span>
+                  <% } else if (s.status === 'failed') { %>
+                    <span class="badge badge-failed">Failed</span>
+                  <% } else { %>
+                    <span class="badge badge-info"><%= s.status %></span>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="empty-mini">
+            <span class="icon">🖥️</span>
+            Hakuna servers
+          </div>
+        <% } %>
+      </div>
+
+      <!-- RECENT DEPLOYMENTS -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">🚀</span> Deployments za Hivi Karibuni</h2>
+          <a href="/admin/deployments" style="font-size: 0.78rem; color: var(--purple-2); font-weight: 700;">Ona zote →</a>
+        </div>
+
+        <% if (deployments && deployments.length > 0) { %>
+          <div class="list">
+            <% deployments.forEach((d) => { %>
+              <div class="list-item">
+                <div class="list-icon">🤖</div>
+                <div class="list-body">
+                  <div class="list-title"><%= d.botName %></div>
+                  <div class="list-sub">
+                    <%= new Date(d.createdAt).toLocaleDateString('sw-TZ', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                  </div>
+                </div>
+                <div class="list-meta">
+                  <% if (d.status === 'success') { %>
+                    <span class="badge badge-success">Success</span>
+                  <% } else if (d.status === 'failed') { %>
+                    <span class="badge badge-failed">Failed</span>
+                  <% } else { %>
+                    <span class="badge badge-pending"><%= d.status %></span>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="empty-mini">
+            <span class="icon">🚀</span>
+            Hakuna deployments
+          </div>
+        <% } %>
+      </div>
+
+      <!-- RECENT TRANSACTIONS -->
+      <div class="section-card grid-full">
+        <div class="section-head">
+          <h2><span class="icon">💰</span> Transactions za Hivi Karibuni</h2>
+          <a href="/admin/transactions" style="font-size: 0.78rem; color: var(--purple-2); font-weight: 700;">Ona zote →</a>
+        </div>
+
+        <% if (transactions && transactions.length > 0) { %>
+          <div class="list">
+            <% transactions.forEach((t) => { %>
+              <div class="list-item">
+                <div class="list-icon"><%= t.type === 'credit' ? '📥' : '📤' %></div>
+                <div class="list-body">
+                  <div class="list-title"><%= t.description || t.reason %></div>
+                  <div class="list-sub">
+                    <%= new Date(t.createdAt).toLocaleString('sw-TZ', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                    • <%= t.reason %>
+                  </div>
+                </div>
+                <div class="list-meta">
+                  <div class="amount <%= t.type === 'credit' ? 'credit' : 'debit' %>">
+                    <%= t.type === 'credit' ? '+' : '-' %><%= t.amount %>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="empty-mini">
+            <span class="icon">💰</span>
+            Hakuna transactions
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+
+    <!-- BACK -->
+    <div style="margin-top: 8px;">
+      <a href="/admin/users" class="btn btn-ghost" style="max-width: 200px;">← Rudi kwa Users</a>
+    </div>
+
+  </main>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) closeSidebar();
+    });
+  </script>
+</body>
+</html>
