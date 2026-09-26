@@ -1,0 +1,1055 @@
+<!--
+  DVARY HOSTING
+  FILE: views/admin/add-panel.ejs
+  Admin - Add OR Edit admin panel (dual purpose)
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --border-soft: rgba(139, 92, 246, 0.12);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+      --sidebar-w: 260px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.1), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 6, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .menu-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 1rem;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.4px;
+      display: none;
+    }
+
+    .admin-tag {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.35);
+      color: #f472b6;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 4px;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .user-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 6px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--border);
+      transition: 0.25s;
+    }
+
+    .user-btn:hover { border-color: var(--purple); }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .user-name { font-size: 0.83rem; font-weight: 700; display: none; }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #0d0820 0%, #100a26 100%);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .sidebar-logo .logo-mark { width: 36px; height: 36px; font-size: 1.05rem; }
+    .sidebar-logo .logo-text { display: block; font-weight: 800; font-size: 0.95rem; }
+
+    .sidebar-badge {
+      display: inline-block;
+      margin: 0 8px 12px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.15));
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      color: #f472b6;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      text-align: center;
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .nav-section {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 14px 10px 6px;
+      font-weight: 700;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .sidebar-link .icon { width: 20px; text-align: center; font-size: 1.05rem; }
+    .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); color: var(--purple-2); }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(236, 72, 153, 0.15));
+      color: #fff;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.2);
+    }
+
+    .sidebar-link.active::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      background: linear-gradient(180deg, var(--purple), var(--pink));
+      border-radius: 0 3px 3px 0;
+    }
+
+    .sidebar-footer { border-top: 1px solid var(--border-soft); padding-top: 10px; margin-top: 10px; }
+    .sidebar-footer .sidebar-link { color: #f87171; }
+    .sidebar-footer .sidebar-link:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 150;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+    }
+
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    .main {
+      position: relative;
+      z-index: 1;
+      padding: 20px 16px 40px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .breadcrumbs {
+      font-size: 0.82rem;
+      color: var(--text-mute);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumbs a { color: var(--text-dim); transition: 0.2s; }
+    .breadcrumbs a:hover { color: var(--purple-2); }
+    .breadcrumbs .sep { opacity: 0.5; }
+    .breadcrumbs .current { color: var(--purple-2); font-weight: 600; }
+
+    .page-head { margin-bottom: 22px; }
+
+    .page-head h1 {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .page-head h1 span {
+      background: linear-gradient(135deg, var(--purple-2), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .page-head p { color: var(--text-dim); font-size: 0.9rem; }
+
+    .alert {
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      margin-bottom: 18px;
+      line-height: 1.5;
+      border-left: 4px solid var(--red);
+      background: rgba(239, 68, 68, 0.08);
+      color: #fca5a5;
+    }
+
+    .alert strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #f87171;
+    }
+
+    .alert ul { margin: 0; padding-left: 18px; }
+    .alert li { margin-bottom: 3px; }
+
+    .form-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .section-head .icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15));
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .section-head h2 {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+
+    .section-head p {
+      font-size: 0.76rem;
+      color: var(--text-mute);
+      margin-top: 2px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 7px;
+      letter-spacing: 0.3px;
+    }
+
+    .form-group label .required {
+      color: #f87171;
+      margin-left: 2px;
+    }
+
+    .input, .select, .textarea {
+      width: 100%;
+      padding: 11px 13px;
+      border-radius: 10px;
+      background: rgba(10, 6, 18, 0.6);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: 0.25s;
+      outline: none;
+    }
+
+    .textarea {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.55;
+    }
+
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+      background: rgba(10, 6, 18, 0.85);
+    }
+
+    .input::placeholder, .textarea::placeholder { color: var(--text-mute); }
+    .select option { background: var(--card-2); color: var(--text); }
+
+    .hint {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid var(--border-soft);
+      cursor: pointer;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--purple);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .checkbox-row label {
+      font-size: 0.85rem;
+      color: var(--text);
+      cursor: pointer;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .checkbox-row .desc {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      margin-top: 2px;
+      font-weight: 400;
+    }
+
+    .form-actions {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 10px;
+      padding-top: 16px;
+      margin-top: 16px;
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 22px;
+      border-radius: 11px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      transition: 0.25s;
+      font-family: inherit;
+      text-decoration: none;
+      width: 100%;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 6px 22px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(139, 92, 246, 0.55);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--purple-2);
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn-primary.loading .spinner { display: inline-block; }
+    .btn-primary.loading .btn-text { display: none; }
+
+    .danger-zone {
+      background: linear-gradient(160deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.05));
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .danger-zone h3 {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #f87171;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .danger-zone p {
+      font-size: 0.83rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 74px;
+      right: 14px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 28px);
+    }
+
+    .toast {
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @media (min-width: 480px) {
+      .logo-text { display: block; }
+      .admin-tag { display: inline-flex; }
+      .user-name { display: block; }
+      .form-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-actions { flex-direction: row; justify-content: flex-end; }
+      .btn { width: auto; min-width: 140px; }
+    }
+
+    @media (min-width: 900px) {
+      .topbar { padding-left: calc(var(--sidebar-w) + 20px); }
+      .sidebar { transform: translateX(0); }
+      .menu-btn { display: none; }
+      .main { padding: 26px 30px 60px; margin-left: var(--sidebar-w); max-width: none; }
+      .overlay { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <% if (success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (warning && warning.length > 0) { %>
+    <div class="toast-container">
+      <% warning.forEach((msg) => { %>
+        <div class="toast warning"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">D</div>
+      <div class="logo-text">DVARY HOSTING</div>
+    </div>
+    <div class="sidebar-badge">🔑 Admin Panel</div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Usimamizi</div>
+
+      <a href="/admin/dashboard" class="sidebar-link">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a href="/admin/users" class="sidebar-link">
+        <span class="icon">👥</span> Users
+      </a>
+      <a href="/admin/bots" class="sidebar-link">
+        <span class="icon">🤖</span> Bots
+      </a>
+      <a href="/admin/deployments" class="sidebar-link">
+        <span class="icon">🚀</span> Deployments
+      </a>
+      <a href="/admin/servers" class="sidebar-link">
+        <span class="icon">🖥️</span> Servers
+      </a>
+
+      <div class="nav-section">Bidhaa</div>
+
+      <a href="/admin/hosting-plans" class="sidebar-link">
+        <span class="icon">📦</span> Hosting Plans
+      </a>
+      <a href="/admin/admin-panels" class="sidebar-link active">
+        <span class="icon">🛡️</span> Admin Panels
+      </a>
+
+      <div class="nav-section">Fedha</div>
+
+      <a href="/admin/transactions" class="sidebar-link">
+        <span class="icon">💰</span> Transactions
+      </a>
+
+      <div class="nav-section">Mfumo</div>
+
+      <a href="/admin/settings" class="sidebar-link">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/dashboard" class="sidebar-link">
+        <span class="icon">👤</span> User View
+      </a>
+      <a href="/auth/logout" class="sidebar-link">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+      <div class="logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+        <span class="admin-tag">🔑 Admin</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <a href="/dashboard/profile" class="user-btn">
+        <div class="user-avatar"><%= user.username.charAt(0) %></div>
+        <span class="user-name"><%= user.username %></span>
+      </a>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <div class="breadcrumbs">
+      <a href="/admin/dashboard">Dashboard</a>
+      <span class="sep">/</span>
+      <a href="/admin/admin-panels">Admin Panels</a>
+      <span class="sep">/</span>
+      <span class="current"><%= isEdit ? 'Edit' : 'Add' %></span>
+    </div>
+
+    <div class="page-head">
+      <% if (isEdit) { %>
+        <h1>Hariri <span><%= panel.name %></span> ✏️</h1>
+        <p>Badilisha taarifa za panel hii kwa uangalifu.</p>
+      <% } else { %>
+        <h1>Add New <span>Admin Panel</span> 🛡️</h1>
+        <p>Jaza taarifa zote za admin panel inayopatikana kwa user kununua.</p>
+      <% } %>
+    </div>
+
+    <% if (errors && errors.length > 0) { %>
+      <div class="alert">
+        <strong>⚠️ Kuna makosa:</strong>
+        <ul>
+          <% errors.forEach((err) => { %>
+            <li><%= err %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form action="<%= isEdit ? `/admin/admin-panels/${panel._id}/edit` : '/admin/admin-panels/add' %>" method="POST" id="panelForm">
+
+      <!-- BASIC INFO -->
+      <div class="form-card">
+        <div class="section-head">
+          <div class="icon">📝</div>
+          <div>
+            <h2>Taarifa za Msingi</h2>
+            <p>Jina, maelezo na picha ya panel</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="name">Jina la Panel <span class="required">*</span></label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="input"
+              placeholder="mfano: WhatsApp Admin Panel"
+              value="<%= old.name || (isEdit ? panel.name : '') %>"
+              required
+              minlength="2"
+              maxlength="80"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="category">Category</label>
+            <input
+              type="text"
+              id="category"
+              name="category"
+              class="input"
+              placeholder="mfano: whatsapp, telegram"
+              value="<%= old.category || (isEdit ? (panel.category || '') : '') %>"
+              maxlength="50"
+            />
+          </div>
+
+          <div class="form-group full">
+            <label for="shortDescription">Maelezo Mafupi</label>
+            <input
+              type="text"
+              id="shortDescription"
+              name="shortDescription"
+              class="input"
+              placeholder="Maelezo mafupi (si zaidi ya herufi 200)"
+              value="<%= old.shortDescription || (isEdit ? (panel.shortDescription || '') : '') %>"
+              maxlength="200"
+            />
+          </div>
+
+          <div class="form-group full">
+            <label for="description">Maelezo Kamili <span class="required">*</span></label>
+            <textarea
+              id="description"
+              name="description"
+              class="textarea"
+              placeholder="Eleza panel hii kwa undani — inafanya nini, vipi kuitumia, n.k."
+              required
+              minlength="10"
+              maxlength="2000"
+              rows="5"
+            ><%= old.description || (isEdit ? panel.description : '') %></textarea>
+          </div>
+
+          <div class="form-group full">
+            <label for="image">Image URL</label>
+            <input
+              type="url"
+              id="image"
+              name="image"
+              class="input"
+              placeholder="https://example.com/panel-image.png"
+              value="<%= old.image || (isEdit ? (panel.image || '') : '') %>"
+            />
+          </div>
+
+          <div class="form-group full">
+            <label for="tags">Tags (comma-separated)</label>
+            <input
+              type="text"
+              id="tags"
+              name="tags"
+              class="input"
+              placeholder="mfano: whatsapp, baileys, admin-panel"
+              value="<%= old.tags || (isEdit && panel.tags && panel.tags.length > 0 ? panel.tags.join(', ') : '') %>"
+            />
+            <div class="hint">Tenganisha tags kwa comma.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRICE & STOCK -->
+      <div class="form-card">
+        <div class="section-head">
+          <div class="icon">💰</div>
+          <div>
+            <h2>Bei (Coins) & Stock</h2>
+            <p>Gharama ya coins na stock</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="price">Bei (coins) <span class="required">*</span></label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              class="input"
+              placeholder="mfano: 200"
+              value="<%= old.price !== undefined && old.price !== '' ? old.price : (isEdit ? panel.price : '') %>"
+              required
+              min="0"
+              step="1"
+            />
+            <div class="hint">Kiasi cha coins ambacho user atatoa kununua panel hii.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="stock">Stock</label>
+            <input
+              type="number"
+              id="stock"
+              name="stock"
+              class="input"
+              placeholder="Acha wazi kwa stock isiyo na kikomo"
+              value="<%= old.stock !== undefined && old.stock !== '' ? old.stock : (isEdit && panel.stock !== null ? panel.stock : '') %>"
+              min="0"
+              step="1"
+            />
+            <div class="hint">Acha wazi kama stock haina kikomo.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DELIVERY INFO -->
+      <div class="form-card">
+        <div class="section-head">
+          <div class="icon">📦</div>
+          <div>
+            <h2>Delivery Information</h2>
+            <p>Taarifa ambazo user atapata baada ya kununua</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="downloadUrl">Download / Access URL</label>
+            <input
+              type="url"
+              id="downloadUrl"
+              name="downloadUrl"
+              class="input"
+              placeholder="https://example.com/panel-download.zip"
+              value="<%= old.downloadUrl || (isEdit ? (panel.downloadUrl || '') : '') %>"
+            />
+            <div class="hint">URL ya kupakua au kufikia panel (user atapewa baada ya kununua).</div>
+          </div>
+
+          <div class="form-group">
+            <label for="panelUsername">Panel Username</label>
+            <input
+              type="text"
+              id="panelUsername"
+              name="panelUsername"
+              class="input"
+              placeholder="mfano: admin"
+              value="<%= old.panelUsername || (isEdit ? (panel.panelUsername || '') : '') %>"
+              maxlength="100"
+            />
+            <div class="hint">Username ya kuingia kwenye panel (user ataiona).</div>
+          </div>
+
+          <div class="form-group">
+            <label for="panelPassword">Panel Password 🔒</label>
+            <input
+              type="text"
+              id="panelPassword"
+              name="panelPassword"
+              class="input"
+              placeholder="mfano: DVARY@2024"
+              value="<%= old.panelPassword || (isEdit ? (panel.panelPassword || '') : '') %>"
+              maxlength="200"
+            />
+            <div class="hint">Password ambayo user ataona baada ya kununua. Atakuwa na kitufe cha "Nakili".</div>
+          </div>
+
+          <div class="form-group full">
+            <label for="deploymentInfo">Deployment Info / Maelekezo</label>
+            <textarea
+              id="deploymentInfo"
+              name="deploymentInfo"
+              class="textarea"
+              placeholder="Maelekezo ya jinsi ya ku-deploy panel (user ataona baada ya kununua)"
+              rows="5"
+              maxlength="2000"
+            ><%= old.deploymentInfo || (isEdit ? (panel.deploymentInfo || '') : '') %></textarea>
+            <div class="hint">Maelezo/maelekezo ya kutumia panel baada ya kununua.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS -->
+      <div class="form-card">
+        <div class="section-head">
+          <div class="icon">⚙️</div>
+          <div>
+            <h2>Status & Uonekano</h2>
+            <p>Status na featured settings</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status" class="select">
+              <option value="active" <%= (old.status || (isEdit ? panel.status : 'active')) === 'active' ? 'selected' : '' %>>✅ Active</option>
+              <option value="inactive" <%= (old.status || (isEdit ? panel.status : '')) === 'inactive' ? 'selected' : '' %>>🚫 Inactive</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <div class="checkbox-row">
+              <input
+                type="checkbox"
+                id="featured"
+                name="featured"
+                <%= (old.featured === 'on' || old.featured === 'true' || (isEdit && panel.featured)) ? 'checked' : '' %>
+              />
+              <label for="featured">
+                ⭐ Featured Panel
+                <div class="desc">Featured panels zinaonekana kwa mbele kwenye marketplace.</div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="/admin/admin-panels" class="btn btn-ghost">← Ghairi</a>
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <span class="btn-text"><%= isEdit ? '💾 Hifadhi Mabadiliko' : '💾 Hifadhi Panel' %></span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+
+    </form>
+
+    <% if (isEdit) { %>
+      <div class="danger-zone">
+        <h3>⚠️ Danger Zone</h3>
+        <p>
+          Kufuta panel ni kitendo cha kudumu. Kama panel imenunuliwa, itawekwa <strong>inactive</strong> badala ya kufutwa moja kwa moja.
+        </p>
+        <button
+          type="button"
+          class="btn btn-danger"
+          style="max-width: 240px;"
+          onclick="document.getElementById('deleteForm').submit();"
+        >
+          🗑️ Futa Panel
+        </button>
+        <form action="/admin/admin-panels/<%= panel._id %>/delete" method="POST" id="deleteForm" style="display: none;" onsubmit="return confirm('Una uhakika unataka kufuta panel hii?');"></form>
+      </div>
+    <% } %>
+
+  </main>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('panelForm').addEventListener('submit', function () {
+      const btn = document.getElementById('submitBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+    });
+
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) closeSidebar();
+    });
+  </script>
+</body>
+</html>
