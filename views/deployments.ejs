@@ -1,0 +1,896 @@
+<!--
+  DVARY HOSTING
+  FILE: views/deployments.ejs
+  My Deployments list page (user view)
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --border-soft: rgba(139, 92, 246, 0.12);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+      --sidebar-w: 250px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.1), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============== TOPBAR ============== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 6, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .menu-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 1rem;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.4px;
+      display: none;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .coins-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+      font-size: 0.83rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .coins-badge small { color: var(--text-mute); font-weight: 500; }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 2px solid rgba(139, 92, 246, 0.4);
+    }
+
+    /* ============== SIDEBAR ============== */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #0d0820 0%, #100a26 100%);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .sidebar-logo .logo-mark { width: 36px; height: 36px; font-size: 1.05rem; }
+    .sidebar-logo .logo-text { display: block; font-weight: 800; font-size: 0.95rem; }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .nav-section {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 14px 10px 6px;
+      font-weight: 700;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .sidebar-link .icon { width: 20px; text-align: center; font-size: 1.05rem; }
+    .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); color: var(--purple-2); }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(236, 72, 153, 0.15));
+      color: #fff;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.2);
+    }
+
+    .sidebar-link.active::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      background: linear-gradient(180deg, var(--purple), var(--pink));
+      border-radius: 0 3px 3px 0;
+    }
+
+    .sidebar-footer { border-top: 1px solid var(--border-soft); padding-top: 10px; margin-top: 10px; }
+    .sidebar-footer .sidebar-link { color: #f87171; }
+    .sidebar-footer .sidebar-link:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+
+    /* ============== OVERLAY ============== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 150;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+    }
+
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    /* ============== MAIN ============== */
+    .main {
+      position: relative;
+      z-index: 1;
+      padding: 20px 16px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-head { margin-bottom: 22px; }
+
+    .page-head h1 {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .page-head h1 span {
+      background: linear-gradient(135deg, var(--purple-2), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .page-head p { color: var(--text-dim); font-size: 0.9rem; }
+
+    /* ============== FILTER CHIPS ============== */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0 12px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .chip {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.25s;
+      white-space: nowrap;
+      text-transform: capitalize;
+    }
+
+    .chip:hover {
+      border-color: var(--purple);
+      color: var(--purple-2);
+      background: rgba(139, 92, 246, 0.15);
+    }
+
+    .chip.active {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+    }
+
+    /* ============== DEPLOYMENTS LIST ============== */
+    .deployments {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .deploy-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: 0.3s;
+      position: relative;
+    }
+
+    .deploy-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+    }
+
+    .deploy-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .deploy-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .deploy-img {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1a0f38, #2a1560);
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      color: var(--purple-2);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid rgba(139, 92, 246, 0.25);
+    }
+
+    .deploy-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    .deploy-info { flex: 1; min-width: 0; }
+
+    .deploy-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .deploy-sub {
+      font-size: 0.76rem;
+      color: var(--text-mute);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .deploy-sub .sep { opacity: 0.5; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-failed  { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-info    { background: rgba(34, 211, 238, 0.15); color: #67e8f9; border: 1px solid rgba(34, 211, 238, 0.3); }
+    .badge-neutral { background: rgba(139, 92, 246, 0.15); color: var(--purple-2); border: 1px solid rgba(139, 92, 246, 0.3); }
+
+    /* ============== PROGRESS MINI ============== */
+    .progress-mini {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-mini-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--purple), var(--pink), var(--cyan));
+      background-size: 200% 100%;
+      animation: shimmer 3s linear infinite;
+      transition: width 0.4s;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 0% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* ============== SPECS ============== */
+    .deploy-specs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .spec {
+      font-size: 0.72rem;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: rgba(34, 211, 238, 0.08);
+      color: #67e8f9;
+      border: 1px solid rgba(34, 211, 238, 0.18);
+      font-weight: 600;
+    }
+
+    .spec.gold {
+      background: rgba(245, 158, 11, 0.08);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.22);
+    }
+
+    /* ============== FOOTER ============== */
+    .deploy-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-soft);
+      margin-top: 4px;
+    }
+
+    .deploy-cost {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .deploy-cost strong {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-radius: 9px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      border: none;
+      cursor: pointer;
+      transition: 0.25s;
+      font-family: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--purple-2);
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    /* ============== EMPTY ============== */
+    .empty {
+      text-align: center;
+      padding: 50px 20px;
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+    }
+
+    .empty-icon { font-size: 2.6rem; margin-bottom: 12px; opacity: 0.5; }
+    .empty h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .empty p { color: var(--text-dim); font-size: 0.88rem; margin-bottom: 14px; }
+
+    /* ============== PAGINATION ============== */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 26px;
+      flex-wrap: wrap;
+    }
+
+    .page-link {
+      padding: 8px 13px;
+      border-radius: 9px;
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .page-link:hover {
+      border-color: var(--purple);
+      color: var(--purple-2);
+      background: rgba(139, 92, 246, 0.15);
+    }
+
+    .page-link.active {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+    }
+
+    .page-info {
+      font-size: 0.8rem;
+      color: var(--text-mute);
+      width: 100%;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* ============== TOASTS ============== */
+    .toast-container {
+      position: fixed;
+      top: 74px;
+      right: 14px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 28px);
+    }
+
+    .toast {
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ============== RESPONSIVE ============== */
+    @media (min-width: 480px) {
+      .logo-text { display: block; }
+    }
+
+    @media (min-width: 700px) {
+      .deploy-inner {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 16px;
+      }
+      .deploy-head { grid-column: 1; }
+      .deploy-specs { grid-column: 1; }
+      .deploy-footer {
+        grid-column: 2;
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+    }
+
+    @media (min-width: 900px) {
+      .topbar { padding-left: calc(var(--sidebar-w) + 20px); }
+      .sidebar { transform: translateX(0); }
+      .menu-btn { display: none; }
+      .main { padding: 26px 30px 60px; margin-left: var(--sidebar-w); max-width: none; }
+      .overlay { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============== TOASTS ============== -->
+  <% if (success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (warning && warning.length > 0) { %>
+    <div class="toast-container">
+      <% warning.forEach((msg) => { %>
+        <div class="toast warning"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- ============== OVERLAY ============== -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">D</div>
+      <div class="logo-text">DVARY HOSTING</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Menu</div>
+
+      <a href="/dashboard" class="sidebar-link">
+        <span class="icon">🏠</span> Dashboard
+      </a>
+      <a href="/bots" class="sidebar-link">
+        <span class="icon">🤖</span> Deploy Bots
+      </a>
+      <a href="/deploy" class="sidebar-link active">
+        <span class="icon">🚀</span> My Deployments
+      </a>
+      <a href="/servers/buy" class="sidebar-link">
+        <span class="icon">🛒</span> Buy Server
+      </a>
+      <a href="/servers" class="sidebar-link">
+        <span class="icon">🖥️</span> My Servers
+      </a>
+      <a href="/servers/admin-panels" class="sidebar-link">
+        <span class="icon">🛡️</span> Admin Panels
+      </a>
+      <a href="/servers/my-panels" class="sidebar-link">
+        <span class="icon">📦</span> My Panels
+      </a>
+
+      <div class="nav-section">Akaunti</div>
+
+      <a href="/coins" class="sidebar-link">
+        <span class="icon">🪙</span> Coins
+      </a>
+      <a href="/coins/transactions" class="sidebar-link">
+        <span class="icon">📊</span> Transactions
+      </a>
+      <a href="/dashboard/profile" class="sidebar-link">
+        <span class="icon">👤</span> Profile
+      </a>
+      <a href="/dashboard/settings" class="sidebar-link">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <% if (isAdmin) { %>
+        <a href="/admin/dashboard" class="sidebar-link">
+          <span class="icon">🔑</span> Admin Panel
+        </a>
+      <% } %>
+      <a href="/auth/logout" class="sidebar-link">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============== TOPBAR ============== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+      <div class="logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <a href="/coins" class="coins-badge">
+        🪙 <%= user.coins %> <small>coins</small>
+      </a>
+      <a href="/dashboard/profile" class="avatar" title="<%= user.username %>">
+        <%= user.username.charAt(0) %>
+      </a>
+    </div>
+  </header>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+
+    <div class="page-head">
+      <h1>My <span>Deployments</span> 🚀</h1>
+      <p>Fuatilia deployments zako zote za bots hapa.</p>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-bar">
+      <a href="/deploy" class="chip <%= filters.status === 'all' ? 'active' : '' %>">Zote</a>
+      <a href="/deploy?status=success" class="chip <%= filters.status === 'success' ? 'active' : '' %>">Success</a>
+      <a href="/deploy?status=pending" class="chip <%= filters.status === 'pending' ? 'active' : '' %>">Pending</a>
+      <a href="/deploy?status=processing" class="chip <%= filters.status === 'processing' ? 'active' : '' %>">Processing</a>
+      <a href="/deploy?status=failed" class="chip <%= filters.status === 'failed' ? 'active' : '' %>">Failed</a>
+      <a href="/deploy?status=cancelled" class="chip <%= filters.status === 'cancelled' ? 'active' : '' %>">Cancelled</a>
+    </div>
+
+    <!-- DEPLOYMENTS LIST -->
+    <% if (deployments && deployments.length > 0) { %>
+      <div class="deployments">
+        <% deployments.forEach((d) => { %>
+          <div class="deploy-card">
+            <div class="deploy-inner">
+
+              <div class="deploy-head">
+                <div class="deploy-img">
+                  <% if (d.bot && d.bot.image) { %>
+                    <img src="<%= d.bot.image %>" alt="<%= d.botName %>" loading="lazy" />
+                  <% } else { %>
+                    🤖
+                  <% } %>
+                </div>
+                <div class="deploy-info">
+                  <div class="deploy-title"><%= d.botName %></div>
+                  <div class="deploy-sub">
+                    <span>#<%= d._id.toString().slice(-6) %></span>
+                    <span class="sep">•</span>
+                    <span>
+                      <%= new Date(d.createdAt).toLocaleString('sw-TZ', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <% if (d.status === 'success') { %>
+                    <span class="badge badge-success">Success</span>
+                  <% } else if (d.status === 'failed') { %>
+                    <span class="badge badge-failed">Failed</span>
+                  <% } else if (d.status === 'cancelled') { %>
+                    <span class="badge badge-neutral">Cancelled</span>
+                  <% } else { %>
+                    <span class="badge badge-pending"><%= d.status %></span>
+                  <% } %>
+                </div>
+              </div>
+
+              <!-- Progress mini (kama bado inaendelea) -->
+              <% if (['pending', 'processing'].includes(d.status)) { %>
+                <div class="progress-mini">
+                  <div class="progress-mini-fill" style="width: <%= d.progress || 0 %>%"></div>
+                </div>
+              <% } %>
+
+              <div class="deploy-specs">
+                <span class="spec">💾 <%= d.ram %>MB</span>
+                <span class="spec">⚡ <%= d.cpu %>%</span>
+                <span class="spec">💿 <%= d.disk %>MB</span>
+                <span class="spec gold">🪙 <%= d.coinsSpent %> coins</span>
+              </div>
+
+              <div class="deploy-footer">
+                <div class="deploy-cost">
+                  <% if (d.status === 'success') { %>
+                    ✅ Imefanikiwa
+                  <% } else if (d.status === 'failed') { %>
+                    ⚠️ Imefail
+                  <% } else if (d.status === 'cancelled') { %>
+                    🚫 Imesitishwa
+                  <% } else { %>
+                    ⏳ Inaendelea...
+                  <% } %>
+                </div>
+                <a href="/deploy/status/<%= d._id %>" class="btn btn-primary">Angalia →</a>
+              </div>
+
+            </div>
+          </div>
+        <% }); %>
+      </div>
+
+      <!-- PAGINATION -->
+      <% if (pagination && pagination.totalPages > 1) { %>
+        <div class="pagination">
+          <% if (pagination.hasPrev) { %>
+            <a href="/deploy?page=<%= pagination.currentPage - 1 %><%= filters.status !== 'all' ? '&status=' + filters.status : '' %>" class="page-link">← Nyuma</a>
+          <% } %>
+
+          <span class="page-link active">
+            <%= pagination.currentPage %> / <%= pagination.totalPages %>
+          </span>
+
+          <% if (pagination.hasNext) { %>
+            <a href="/deploy?page=<%= pagination.currentPage + 1 %><%= filters.status !== 'all' ? '&status=' + filters.status : '' %>" class="page-link">Mbele →</a>
+          <% } %>
+
+          <div class="page-info">Jumla: <%= pagination.total %> deployments</div>
+        </div>
+      <% } %>
+
+    <% } else { %>
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        <h3>Hakuna deployments</h3>
+        <p>
+          <% if (filters.status !== 'all') { %>
+            Hakuna deployments za status "<%= filters.status %>".
+          <% } else { %>
+            Bado huja-deploy bot yoyote.
+          <% } %>
+        </p>
+        <a href="/bots" class="btn btn-primary">Anza Deploy →</a>
+      </div>
+    <% } %>
+
+  </main>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) closeSidebar();
+    });
+  </script>
+</body>
+</html>
