@@ -1,0 +1,1176 @@
+<!--
+  DVARY HOSTING
+  FILE: views/deploy.ejs
+  Deploy page / Deployment status page (dual purpose)
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --border-soft: rgba(139, 92, 246, 0.12);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+      --sidebar-w: 250px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.1), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============== TOPBAR ============== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 6, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .menu-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 1rem;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.4px;
+      display: none;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .coins-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+      font-size: 0.83rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .coins-badge small { color: var(--text-mute); font-weight: 500; }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 2px solid rgba(139, 92, 246, 0.4);
+    }
+
+    /* ============== SIDEBAR ============== */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #0d0820 0%, #100a26 100%);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .sidebar-logo .logo-mark { width: 36px; height: 36px; font-size: 1.05rem; }
+    .sidebar-logo .logo-text { display: block; font-weight: 800; font-size: 0.95rem; }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .nav-section {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 14px 10px 6px;
+      font-weight: 700;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .sidebar-link .icon { width: 20px; text-align: center; font-size: 1.05rem; }
+    .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); color: var(--purple-2); }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(236, 72, 153, 0.15));
+      color: #fff;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.2);
+    }
+
+    .sidebar-link.active::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      background: linear-gradient(180deg, var(--purple), var(--pink));
+      border-radius: 0 3px 3px 0;
+    }
+
+    .sidebar-footer { border-top: 1px solid var(--border-soft); padding-top: 10px; margin-top: 10px; }
+    .sidebar-footer .sidebar-link { color: #f87171; }
+    .sidebar-footer .sidebar-link:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+
+    /* ============== OVERLAY ============== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 150;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+    }
+
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    /* ============== MAIN ============== */
+    .main {
+      position: relative;
+      z-index: 1;
+      padding: 20px 16px 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .page-head { margin-bottom: 22px; }
+
+    .page-head h1 {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .page-head h1 span {
+      background: linear-gradient(135deg, var(--purple-2), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .page-head p { color: var(--text-dim); font-size: 0.9rem; }
+
+    /* ============== DEPLOY CARD ============== */
+    .deploy-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      animation: fadeUp 0.4s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .deploy-hero {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(236, 72, 153, 0.08));
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .deploy-bot-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #1a0f38, #2a1560);
+      display: grid;
+      place-items: center;
+      font-size: 2.2rem;
+      color: var(--purple-2);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 2px solid rgba(139, 92, 246, 0.35);
+    }
+
+    .deploy-bot-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    .deploy-bot-info { flex: 1; min-width: 0; }
+
+    .deploy-cat {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.18);
+      color: var(--purple-2);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .deploy-bot-info h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .deploy-bot-info p {
+      font-size: 0.83rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .deploy-body { padding: 20px; }
+
+    /* ============== SPECS MINI ============== */
+    .mini-specs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .mini-spec {
+      background: rgba(139, 92, 246, 0.06);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .mini-spec .label {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .mini-spec .value {
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    /* ============== PRICE SUMMARY ============== */
+    .summary {
+      background: rgba(139, 92, 246, 0.06);
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 0.88rem;
+    }
+
+    .summary-row + .summary-row {
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .summary-label { color: var(--text-dim); }
+    .summary-value { font-weight: 700; }
+
+    .summary-value.gold {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-size: 1rem;
+    }
+
+    .summary-value.ok { color: #34d399; }
+    .summary-value.insufficient { color: #f87171; }
+
+    /* ============== BUTTONS ============== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 22px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      transition: 0.25s;
+      font-family: inherit;
+      text-decoration: none;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 6px 22px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(139, 92, 246, 0.55);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--purple-2);
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ============== PROGRESS ============== */
+    .progress-wrap { margin-bottom: 20px; }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+    }
+
+    .progress-label { color: var(--text-dim); font-weight: 600; }
+    .progress-pct { font-weight: 800; color: var(--purple-2); }
+
+    .progress-bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--purple), var(--pink), var(--cyan));
+      background-size: 200% 100%;
+      width: 0%;
+      transition: width 0.6s ease;
+      animation: shimmer 3s linear infinite;
+      position: relative;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 0% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* ============== STATUS BADGE ============== */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .status-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .status-success .dot { background: #34d399; box-shadow: 0 0 10px #34d399; }
+
+    .status-failed {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+    .status-failed .dot { background: #f87171; box-shadow: 0 0 10px #f87171; }
+
+    .status-pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+    .status-pending .dot { background: #fbbf24; box-shadow: 0 0 10px #fbbf24; animation: pulse 1.5s infinite; }
+
+    .status-neutral {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--purple-2);
+      border: 1px solid rgba(139, 92, 246, 0.35);
+    }
+    .status-neutral .dot { background: var(--purple-2); box-shadow: 0 0 10px var(--purple-2); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ============== LOGS ============== */
+    .logs {
+      background: #06030d;
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 14px;
+      max-height: 340px;
+      overflow-y: auto;
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 10px;
+      padding: 3px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+    }
+
+    .log-line:last-child { border-bottom: none; }
+
+    .log-time {
+      color: var(--text-mute);
+      flex-shrink: 0;
+      font-size: 0.72rem;
+    }
+
+    .log-msg { flex: 1; word-break: break-word; }
+
+    .log-info .log-msg { color: var(--text-dim); }
+    .log-success .log-msg { color: #34d399; }
+    .log-warn .log-msg { color: #fbbf24; }
+    .log-error .log-msg { color: #f87171; }
+
+    /* ============== ERROR BOX ============== */
+    .error-box {
+      padding: 12px 14px;
+      border-radius: 11px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* ============== SECTION HEAD ============== */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .section-head h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-head h2 .icon { font-size: 1.1rem; }
+
+    /* ============== SERVER INFO ============== */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      font-size: 0.85rem;
+    }
+
+    .info-label { color: var(--text-mute); font-weight: 600; }
+    .info-value { color: var(--text); font-weight: 700; word-break: break-all; text-align: right; }
+
+    /* ============== TOASTS ============== */
+    .toast-container {
+      position: fixed;
+      top: 74px;
+      right: 14px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 28px);
+    }
+
+    .toast {
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ============== LOADING SPINNER ============== */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn.loading .spinner { display: inline-block; }
+    .btn.loading .btn-text { display: none; }
+
+    /* ============== RESPONSIVE ============== */
+    @media (min-width: 480px) {
+      .logo-text { display: block; }
+      .deploy-hero { flex-direction: row; align-items: center; }
+      .btn-row { flex-direction: row; }
+      .btn-row .btn { width: auto; flex: 1; }
+      .info-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 900px) {
+      .topbar { padding-left: calc(var(--sidebar-w) + 20px); }
+      .sidebar { transform: translateX(0); }
+      .menu-btn { display: none; }
+      .main { padding: 26px 30px 60px; margin-left: var(--sidebar-w); max-width: none; }
+      .overlay { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============== TOASTS ============== -->
+  <% if (success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (warning && warning.length > 0) { %>
+    <div class="toast-container">
+      <% warning.forEach((msg) => { %>
+        <div class="toast warning"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- ============== OVERLAY ============== -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">D</div>
+      <div class="logo-text">DVARY HOSTING</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Menu</div>
+
+      <a href="/dashboard" class="sidebar-link">
+        <span class="icon">🏠</span> Dashboard
+      </a>
+      <a href="/bots" class="sidebar-link <%= !isStatusPage ? 'active' : '' %>">
+        <span class="icon">🤖</span> Deploy Bots
+      </a>
+      <a href="/deploy" class="sidebar-link <%= isStatusPage ? 'active' : '' %>">
+        <span class="icon">🚀</span> My Deployments
+      </a>
+      <a href="/servers/buy" class="sidebar-link">
+        <span class="icon">🛒</span> Buy Server
+      </a>
+      <a href="/servers" class="sidebar-link">
+        <span class="icon">🖥️</span> My Servers
+      </a>
+      <a href="/servers/admin-panels" class="sidebar-link">
+        <span class="icon">🛡️</span> Admin Panels
+      </a>
+      <a href="/servers/my-panels" class="sidebar-link">
+        <span class="icon">📦</span> My Panels
+      </a>
+
+      <div class="nav-section">Akaunti</div>
+
+      <a href="/coins" class="sidebar-link">
+        <span class="icon">🪙</span> Coins
+      </a>
+      <a href="/coins/transactions" class="sidebar-link">
+        <span class="icon">📊</span> Transactions
+      </a>
+      <a href="/dashboard/profile" class="sidebar-link">
+        <span class="icon">👤</span> Profile
+      </a>
+      <a href="/dashboard/settings" class="sidebar-link">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <% if (isAdmin) { %>
+        <a href="/admin/dashboard" class="sidebar-link">
+          <span class="icon">🔑</span> Admin Panel
+        </a>
+      <% } %>
+      <a href="/auth/logout" class="sidebar-link">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============== TOPBAR ============== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+      <div class="logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <a href="/coins" class="coins-badge">
+        🪙 <%= user.coins %> <small>coins</small>
+      </a>
+      <a href="/dashboard/profile" class="avatar" title="<%= user.username %>">
+        <%= user.username.charAt(0) %>
+      </a>
+    </div>
+  </header>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+
+    <% if (isStatusPage) { %>
+      <!-- ============================================================= -->
+      <!-- DEPLOYMENT STATUS PAGE -->
+      <!-- ============================================================= -->
+
+      <div class="page-head">
+        <h1>Deployment <span>Status</span> 🚀</h1>
+        <p>Fuatilia maendeleo ya deployment yako hapa chini.</p>
+      </div>
+
+      <div class="deploy-card">
+        <!-- BOT INFO -->
+        <div class="deploy-hero">
+          <div class="deploy-bot-img">
+            <% if (bot && bot.image) { %>
+              <img src="<%= bot.image %>" alt="<%= deployment.botName %>" />
+            <% } else { %>
+              🤖
+            <% } %>
+          </div>
+          <div class="deploy-bot-info">
+            <% if (bot && bot.category) { %>
+              <span class="deploy-cat"><%= bot.category %></span>
+            <% } %>
+            <h2><%= deployment.botName %></h2>
+            <p>Deployed: <%= new Date(deployment.createdAt).toLocaleString('sw-TZ', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></p>
+          </div>
+        </div>
+
+        <!-- BODY -->
+        <div class="deploy-body">
+
+          <!-- STATUS BADGE -->
+          <div id="statusBadgeWrap">
+            <% if (deployment.status === 'success') { %>
+              <div class="status-badge status-success">
+                <span class="dot"></span> Imefanikiwa
+              </div>
+            <% } else if (deployment.status === 'failed') { %>
+              <div class="status-badge status-failed">
+                <span class="dot"></span> Imefail
+              </div>
+            <% } else if (deployment.status === 'cancelled') { %>
+              <div class="status-badge status-neutral">
+                <span class="dot"></span> Imesitishwa
+              </div>
+            <% } else { %>
+              <div class="status-badge status-pending">
+                <span class="dot"></span> Inaendelea...
+              </div>
+            <% } %>
+          </div>
+
+          <!-- ERROR MESSAGE -->
+          <div id="errorBoxWrap">
+            <% if (deployment.status === 'failed' && deployment.errorMessage) { %>
+              <div class="error-box">
+                <strong>⚠️ Hitilafu:</strong> <%= deployment.errorMessage %>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- PROGRESS -->
+          <div class="progress-wrap">
+            <div class="progress-head">
+              <span class="progress-label">Maendeleo</span>
+              <span class="progress-pct" id="progressPct"><%= deployment.progress || 0 %>%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill" style="width: <%= deployment.progress || 0 %>%"></div>
+            </div>
+          </div>
+
+          <!-- SPECS -->
+          <div class="mini-specs">
+            <div class="mini-spec">
+              <div class="label">RAM</div>
+              <div class="value"><%= deployment.ram %> MB</div>
+            </div>
+            <div class="mini-spec">
+              <div class="label">CPU</div>
+              <div class="value"><%= deployment.cpu %>%</div>
+            </div>
+            <div class="mini-spec">
+              <div class="label">Disk</div>
+              <div class="value"><%= deployment.disk %> MB</div>
+            </div>
+          </div>
+
+          <!-- SERVER INFO (kama success) -->
+          <% if (deployment.status === 'success' && deployment.pterodactylServerIdentifier) { %>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Server ID</span>
+                <span class="info-value"><%= deployment.pterodactylServerIdentifier %></span>
+              </div>
+              <% if (deployment.pterodactylServerId) { %>
+                <div class="info-item">
+                  <span class="info-label">Pterodactyl ID</span>
+                  <span class="info-value">#<%= deployment.pterodactylServerId %></span>
+                </div>
+              <% } %>
+            </div>
+          <% } %>
+
+          <!-- SUMMARY -->
+          <div class="summary">
+            <div class="summary-row">
+              <span class="summary-label">Coins zilizotumika</span>
+              <span class="summary-value gold"><%= deployment.coinsSpent %></span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Balance yako</span>
+              <span class="summary-value ok"><%= user.coins %></span>
+            </div>
+          </div>
+
+          <!-- LOGS -->
+          <div class="section-head" style="margin-bottom: 12px;">
+            <h2><span class="icon">📜</span> Logs</h2>
+          </div>
+
+          <div class="logs" id="logsBox">
+            <% if (deployment.logs && deployment.logs.length > 0) { %>
+              <% deployment.logs.forEach((log) => { %>
+                <div class="log-line log-<%= log.level || 'info' %>">
+                  <span class="log-time">
+                    <%= new Date(log.timestamp).toLocaleTimeString('sw-TZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) %>
+                  </span>
+                  <span class="log-msg"><%= log.message %></span>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <div class="log-line log-info">
+                <span class="log-msg">Hakuna logs bado...</span>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- ACTIONS -->
+          <div class="btn-row" style="margin-top: 18px;">
+            <a href="/deploy" class="btn btn-ghost">← My Deployments</a>
+            <% if (deployment.status === 'success') { %>
+              <a href="/servers" class="btn btn-primary">Ona Server →</a>
+            <% } else if (deployment.status === 'failed') { %>
+              <a href="/bots" class="btn btn-primary">Jaribu Tena →</a>
+            <% } else if (['pending', 'processing'].includes(deployment.status)) { %>
+              <form action="/deploy/cancel/<%= deployment._id %>" method="POST" style="flex: 1;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Una uhakika unataka kusitisha deployment hii?');">
+                  Sitisha Deployment
+                </button>
+              </form>
+            <% } %>
+          </div>
+
+        </div>
+      </div>
+
+      <script>
+        // Polling deployment status kila sekunde 2 kama bado inaendelea
+        const deploymentId = '<%= deployment._id %>';
+        const initialStatus = '<%= deployment.status %>';
+
+        if (['pending', 'processing'].includes(initialStatus)) {
+          const pollInterval = setInterval(async () => {
+            try {
+              const res = await fetch(`/deploy/status-json/${deploymentId}`);
+              if (!res.ok) return;
+              const data = await res.json();
+              if (!data.success) return;
+
+              const d = data.deployment;
+
+              // Update progress
+              document.getElementById('progressFill').style.width = d.progress + '%';
+              document.getElementById('progressPct').textContent = d.progress + '%';
+
+              // Update logs
+              const logsBox = document.getElementById('logsBox');
+              if (d.logs && d.logs.length > 0) {
+                logsBox.innerHTML = d.logs.map((log) => {
+                  const time = new Date(log.timestamp).toLocaleTimeString('sw-TZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                  return `<div class="log-line log-${log.level || 'info'}"><span class="log-time">${time}</span><span class="log-msg">${escapeHtml(log.message)}</span></div>`;
+                }).join('');
+                logsBox.scrollTop = logsBox.scrollHeight;
+              }
+
+              // Kama imekamilika au imefail, reload
+              if (d.status === 'success' || d.status === 'failed' || d.status === 'cancelled') {
+                clearInterval(pollInterval);
+                setTimeout(() => window.location.reload(), 800);
+              }
+            } catch (err) {
+              // Ignore errors - tutaendelea kujaribu
+            }
+          }, 2000);
+        }
+
+        function escapeHtml(str) {
+          const div = document.createElement('div');
+          div.textContent = str;
+          return div.innerHTML;
+        }
+      </script>
+
+    <% } else { %>
+      <!-- ============================================================= -->
+      <!-- DEPLOY CONFIRMATION PAGE -->
+      <!-- ============================================================= -->
+
+      <div class="page-head">
+        <h1>Thibitisha <span>Deployment</span> 🚀</h1>
+        <p>Angalia taarifa zote kabla ya kuendelea.</p>
+      </div>
+
+      <div class="deploy-card">
+        <div class="deploy-hero">
+          <div class="deploy-bot-img">
+            <% if (bot.image) { %>
+              <img src="<%= bot.image %>" alt="<%= bot.name %>" />
+            <% } else { %>
+              🤖
+            <% } %>
+          </div>
+          <div class="deploy-bot-info">
+            <span class="deploy-cat"><%= bot.category %></span>
+            <h2><%= bot.name %></h2>
+            <p><%= bot.shortDescription || bot.description %></p>
+          </div>
+        </div>
+
+        <div class="deploy-body">
+
+          <!-- SPECS -->
+          <div class="mini-specs">
+            <div class="mini-spec">
+              <div class="label">RAM</div>
+              <div class="value"><%= bot.ram %> MB</div>
+            </div>
+            <div class="mini-spec">
+              <div class="label">CPU</div>
+              <div class="value"><%= bot.cpu %>%</div>
+            </div>
+            <div class="mini-spec">
+              <div class="label">Disk</div>
+              <div class="value"><%= bot.disk %> MB</div>
+            </div>
+          </div>
+
+          <!-- SUMMARY -->
+          <div class="summary">
+            <div class="summary-row">
+              <span class="summary-label">Bei ya Deployment</span>
+              <span class="summary-value gold"><%= bot.price %> coins</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Balance yako</span>
+              <span class="summary-value <%= canAfford ? 'ok' : 'insufficient' %>">
+                <%= user.coins %> coins
+              </span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Itabaki</span>
+              <span class="summary-value <%= canAfford ? 'ok' : 'insufficient' %>">
+                <%= user.coins - bot.price %> coins
+              </span>
+            </div>
+          </div>
+
+          <% if (!canAfford) { %>
+            <div class="error-box">
+              ⚠️ Coins zako hazitoshi. Unahitaji coins <strong><%= bot.price - user.coins %></strong> zaidi. Wasiliana na admin kuongeza coins.
+            </div>
+          <% } %>
+
+          <!-- ACTIONS -->
+          <div class="btn-row">
+            <a href="/bots/<%= bot._id %>" class="btn btn-ghost">← Rudi</a>
+
+            <% if (canAfford) { %>
+              <form action="/deploy" method="POST" style="flex: 1;" id="deployForm">
+                <input type="hidden" name="botId" value="<%= bot._id %>" />
+                <button type="submit" class="btn btn-primary" id="deployBtn">
+                  <span class="btn-text">Thibitisha & Deploy</span>
+                  <span class="spinner"></span>
+                </button>
+              </form>
+            <% } else { %>
+              <button class="btn btn-primary" disabled>Coins Hazitoshi</button>
+            <% } %>
+          </div>
+
+          <div style="margin-top: 14px; padding: 12px; border-radius: 10px; background: rgba(139, 92, 246, 0.06); border: 1px solid var(--border-soft); font-size: 0.8rem; color: var(--text-mute); line-height: 1.6;">
+            💡 <strong>Kumbuka:</strong> Coins zitatolewa mara moja baada ya kuthibitisha. Kama deployment itafail, coins zitarudishwa automatically.
+          </div>
+
+        </div>
+      </div>
+
+      <script>
+        const deployForm = document.getElementById('deployForm');
+        if (deployForm) {
+          deployForm.addEventListener('submit', function () {
+            const btn = document.getElementById('deployBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+          });
+        }
+      </script>
+
+    <% } %>
+
+  </main>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) closeSidebar();
+    });
+  </script>
+</body>
+</html>
