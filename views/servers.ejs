@@ -1,0 +1,1131 @@
+<!--
+  DVARY HOSTING
+  FILE: views/servers.ejs
+  My Servers (list) + Server details (single) - dual purpose
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --border-soft: rgba(139, 92, 246, 0.12);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+      --sidebar-w: 250px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.1), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============== TOPBAR ============== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 6, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .menu-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 1rem;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.4px;
+      display: none;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .coins-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+      font-size: 0.83rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .coins-badge small { color: var(--text-mute); font-weight: 500; }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 2px solid rgba(139, 92, 246, 0.4);
+    }
+
+    /* ============== SIDEBAR ============== */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #0d0820 0%, #100a26 100%);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .sidebar-logo .logo-mark { width: 36px; height: 36px; font-size: 1.05rem; }
+    .sidebar-logo .logo-text { display: block; font-weight: 800; font-size: 0.95rem; }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .nav-section {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 14px 10px 6px;
+      font-weight: 700;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .sidebar-link .icon { width: 20px; text-align: center; font-size: 1.05rem; }
+    .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); color: var(--purple-2); }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(236, 72, 153, 0.15));
+      color: #fff;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.2);
+    }
+
+    .sidebar-link.active::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      background: linear-gradient(180deg, var(--purple), var(--pink));
+      border-radius: 0 3px 3px 0;
+    }
+
+    .sidebar-footer { border-top: 1px solid var(--border-soft); padding-top: 10px; margin-top: 10px; }
+    .sidebar-footer .sidebar-link { color: #f87171; }
+    .sidebar-footer .sidebar-link:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+
+    /* ============== OVERLAY ============== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 150;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+    }
+
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    /* ============== MAIN ============== */
+    .main {
+      position: relative;
+      z-index: 1;
+      padding: 20px 16px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h1 {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .page-head h1 span {
+      background: linear-gradient(135deg, var(--purple-2), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .page-head p { color: var(--text-dim); font-size: 0.9rem; }
+
+    .breadcrumbs {
+      font-size: 0.82rem;
+      color: var(--text-mute);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumbs a { color: var(--text-dim); }
+    .breadcrumbs a:hover { color: var(--purple-2); }
+    .breadcrumbs .sep { opacity: 0.5; }
+    .breadcrumbs .current { color: var(--purple-2); font-weight: 600; }
+
+    /* ============== FILTER CHIPS ============== */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0 12px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .chip {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.25s;
+      white-space: nowrap;
+      text-transform: capitalize;
+    }
+
+    .chip:hover {
+      border-color: var(--purple);
+      color: var(--purple-2);
+      background: rgba(139, 92, 246, 0.15);
+    }
+
+    .chip.active {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+    }
+
+    /* ============== SERVER CARDS ============== */
+    .servers {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .server-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      transition: 0.3s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .server-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+    }
+
+    .server-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .server-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(236, 72, 153, 0.18));
+      display: grid;
+      place-items: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      overflow: hidden;
+    }
+
+    .server-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+    .server-info { flex: 1; min-width: 0; }
+
+    .server-name {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .server-source {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-failed  { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-info    { background: rgba(34, 211, 238, 0.15); color: #67e8f9; border: 1px solid rgba(34, 211, 238, 0.3); }
+    .badge-neutral { background: rgba(139, 92, 246, 0.15); color: var(--purple-2); border: 1px solid rgba(139, 92, 246, 0.3); }
+
+    .server-specs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .spec {
+      font-size: 0.72rem;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: rgba(34, 211, 238, 0.08);
+      color: #67e8f9;
+      border: 1px solid rgba(34, 211, 238, 0.18);
+      font-weight: 600;
+    }
+
+    .spec.gold {
+      background: rgba(245, 158, 11, 0.08);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.22);
+    }
+
+    .server-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-soft);
+      flex-wrap: wrap;
+    }
+
+    .server-meta {
+      font-size: 0.76rem;
+      color: var(--text-mute);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-radius: 9px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      border: none;
+      cursor: pointer;
+      transition: 0.25s;
+      font-family: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--purple-2);
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .btn-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .btn-warning:hover {
+      background: rgba(245, 158, 11, 0.25);
+      color: #fcd34d;
+    }
+
+    .btn-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-success:hover {
+      background: rgba(16, 185, 129, 0.25);
+      color: #6ee7b7;
+    }
+
+    /* ============== SINGLE SERVER VIEW ============== */
+    .server-hero {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .server-hero-head {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 22px 20px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.1));
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .server-hero-head h1 {
+      font-size: clamp(1.15rem, 4vw, 1.5rem);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .server-hero-head .sub {
+      color: var(--text-dim);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .server-hero-body { padding: 20px; }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      font-size: 0.85rem;
+    }
+
+    .info-label { color: var(--text-mute); font-weight: 600; flex-shrink: 0; }
+    .info-value { color: var(--text); font-weight: 700; word-break: break-all; text-align: right; }
+
+    .info-value.copy {
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .info-value.copy:hover { color: var(--purple-2); }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .live-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .live-online { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .live-online .dot { background: #34d399; box-shadow: 0 0 10px #34d399; animation: pulse 1.5s infinite; }
+
+    .live-offline { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+    .live-offline .dot { background: #f87171; box-shadow: 0 0 10px #f87171; }
+
+    .live-unknown { background: rgba(139, 92, 246, 0.15); color: var(--purple-2); border: 1px solid rgba(139, 92, 246, 0.35); }
+    .live-unknown .dot { background: var(--purple-2); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .section-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-soft);
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-head h2 .icon { font-size: 1.1rem; }
+
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .actions-row form { flex: 1; min-width: 140px; }
+    .actions-row form button { width: 100%; }
+
+    .error-box {
+      padding: 12px 14px;
+      border-radius: 11px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .warn-box {
+      padding: 12px 14px;
+      border-radius: 11px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fcd34d;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* ============== EMPTY ============== */
+    .empty {
+      text-align: center;
+      padding: 50px 20px;
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+    }
+
+    .empty-icon { font-size: 2.6rem; margin-bottom: 12px; opacity: 0.5; }
+    .empty h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .empty p { color: var(--text-dim); font-size: 0.88rem; margin-bottom: 14px; }
+
+    /* ============== TOASTS ============== */
+    .toast-container {
+      position: fixed;
+      top: 74px;
+      right: 14px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 28px);
+    }
+
+    .toast {
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ============== RESPONSIVE ============== */
+    @media (min-width: 480px) {
+      .logo-text { display: block; }
+      .server-hero-head { flex-direction: row; align-items: center; justify-content: space-between; }
+      .info-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 700px) {
+      .servers { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 900px) {
+      .topbar { padding-left: calc(var(--sidebar-w) + 20px); }
+      .sidebar { transform: translateX(0); }
+      .menu-btn { display: none; }
+      .main { padding: 26px 30px 60px; margin-left: var(--sidebar-w); max-width: none; }
+      .overlay { display: none; }
+      .servers { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============== TOASTS ============== -->
+  <% if (success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (warning && warning.length > 0) { %>
+    <div class="toast-container">
+      <% warning.forEach((msg) => { %>
+        <div class="toast warning"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- ============== OVERLAY ============== -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">D</div>
+      <div class="logo-text">DVARY HOSTING</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Menu</div>
+
+      <a href="/dashboard" class="sidebar-link">
+        <span class="icon">🏠</span> Dashboard
+      </a>
+      <a href="/bots" class="sidebar-link">
+        <span class="icon">🤖</span> Deploy Bots
+      </a>
+      <a href="/deploy" class="sidebar-link">
+        <span class="icon">🚀</span> My Deployments
+      </a>
+      <a href="/servers/buy" class="sidebar-link">
+        <span class="icon">🛒</span> Buy Server
+      </a>
+      <a href="/servers" class="sidebar-link active">
+        <span class="icon">🖥️</span> My Servers
+      </a>
+      <a href="/servers/admin-panels" class="sidebar-link">
+        <span class="icon">🛡️</span> Admin Panels
+      </a>
+      <a href="/servers/my-panels" class="sidebar-link">
+        <span class="icon">📦</span> My Panels
+      </a>
+
+      <div class="nav-section">Akaunti</div>
+
+      <a href="/coins" class="sidebar-link">
+        <span class="icon">🪙</span> Coins
+      </a>
+      <a href="/coins/transactions" class="sidebar-link">
+        <span class="icon">📊</span> Transactions
+      </a>
+      <a href="/dashboard/profile" class="sidebar-link">
+        <span class="icon">👤</span> Profile
+      </a>
+      <a href="/dashboard/settings" class="sidebar-link">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <% if (isAdmin) { %>
+        <a href="/admin/dashboard" class="sidebar-link">
+          <span class="icon">🔑</span> Admin Panel
+        </a>
+      <% } %>
+      <a href="/auth/logout" class="sidebar-link">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============== TOPBAR ============== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+      <div class="logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <a href="/coins" class="coins-badge">
+        🪙 <%= user.coins %> <small>coins</small>
+      </a>
+      <a href="/dashboard/profile" class="avatar" title="<%= user.username %>">
+        <%= user.username.charAt(0) %>
+      </a>
+    </div>
+  </header>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+
+    <% if (typeof singleServer !== 'undefined' && singleServer) { %>
+      <!-- ============================================================= -->
+      <!-- SINGLE SERVER DETAILS VIEW -->
+      <!-- ============================================================= -->
+
+      <div class="breadcrumbs">
+        <a href="/dashboard">Dashboard</a>
+        <span class="sep">/</span>
+        <a href="/servers">Servers</a>
+        <span class="sep">/</span>
+        <span class="current"><%= singleServer.name %></span>
+      </div>
+
+      <div class="server-hero">
+        <div class="server-hero-head">
+          <div>
+            <h1><%= singleServer.name %></h1>
+            <p class="sub">
+              <%= singleServer.description || 'Server yako ya DVARY HOSTING' %>
+            </p>
+          </div>
+
+          <% if (singleServer.status === 'active') { %>
+            <span class="badge badge-success">Active</span>
+          <% } else if (singleServer.status === 'suspended') { %>
+            <span class="badge badge-pending">Suspended</span>
+          <% } else if (singleServer.status === 'failed') { %>
+            <span class="badge badge-failed">Failed</span>
+          <% } else if (singleServer.status === 'creating') { %>
+            <span class="badge badge-info">Inaundwa</span>
+          <% } else { %>
+            <span class="badge badge-neutral"><%= singleServer.status %></span>
+          <% } %>
+        </div>
+
+        <div class="server-hero-body">
+
+          <!-- LIVE STATUS -->
+          <% if (typeof liveStatus !== 'undefined' && liveStatus) { %>
+            <div class="live-badge <%= liveStatus.status === 'running' || liveStatus.status === 'starting' ? 'live-online' : 'live-offline' %>">
+              <span class="dot"></span>
+              Live: <%= liveStatus.status || 'unknown' %>
+              <% if (liveStatus.suspended) { %> • SUSPENDED<% } %>
+            </div>
+          <% } else if (typeof liveError !== 'undefined' && liveError) { %>
+            <div class="warn-box">
+              ⚠️ Live status haipatikani kwa sasa: <%= liveError %>
+            </div>
+          <% } %>
+
+          <!-- SPECS -->
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">💾 RAM</span>
+              <span class="info-value"><%= singleServer.ram %> MB</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">⚡ CPU</span>
+              <span class="info-value"><%= singleServer.cpu %>%</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">💿 Disk</span>
+              <span class="info-value"><%= singleServer.disk %> MB</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">🪙 Coins</span>
+              <span class="info-value"><%= singleServer.coinsSpent %></span>
+            </div>
+          </div>
+
+          <!-- IDENTIFIERS -->
+          <% if (singleServer.pterodactylServerId || singleServer.pterodactylServerIdentifier) { %>
+            <div class="section-head" style="margin-bottom: 12px;">
+              <h2><span class="icon">🔑</span> Utambulisho</h2>
+            </div>
+
+            <div class="info-grid">
+              <% if (singleServer.pterodactylServerId) { %>
+                <div class="info-item">
+                  <span class="info-label">Pterodactyl ID</span>
+                  <span class="info-value copy" onclick="copyText('<%= singleServer.pterodactylServerId %>', event)">
+                    #<%= singleServer.pterodactylServerId %>
+                  </span>
+                </div>
+              <% } %>
+
+              <% if (singleServer.pterodactylServerIdentifier) { %>
+                <div class="info-item">
+                  <span class="info-label">Identifier</span>
+                  <span class="info-value copy" onclick="copyText('<%= singleServer.pterodactylServerIdentifier %>', event)">
+                    <%= singleServer.pterodactylServerIdentifier %>
+                  </span>
+                </div>
+              <% } %>
+
+              <% if (singleServer.pterodactylServerUuid) { %>
+                <div class="info-item">
+                  <span class="info-label">UUID</span>
+                  <span class="info-value copy" onclick="copyText('<%= singleServer.pterodactylServerUuid %>', event)">
+                    <%= singleServer.pterodactylServerUuid %>
+                  </span>
+                </div>
+              <% } %>
+            </div>
+          <% } %>
+
+          <!-- ERROR -->
+          <% if (singleServer.status === 'failed' && singleServer.errorMessage) { %>
+            <div class="error-box">
+              <strong>⚠️ Hitilafu:</strong> <%= singleServer.errorMessage %>
+            </div>
+          <% } %>
+
+          <!-- SUSPEND REASON -->
+          <% if (singleServer.status === 'suspended' && singleServer.suspendReason) { %>
+            <div class="warn-box">
+              <strong>Sababu ya kusimamishwa:</strong> <%= singleServer.suspendReason %>
+            </div>
+          <% } %>
+
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="section-card">
+        <div class="section-head">
+          <h2><span class="icon">⚙️</span> Vitendo</h2>
+        </div>
+
+        <div class="actions-row">
+          <a href="/servers" class="btn btn-ghost" style="flex: 1;">← Rudi kwa Servers</a>
+
+          <% if (singleServer.status === 'active') { %>
+            <form action="/servers/<%= singleServer._id %>/suspend" method="POST">
+              <button type="submit" class="btn btn-warning" onclick="return confirm('Una uhakika unataka kusimamisha server hii?');">
+                ⏸️ Suspend
+              </button>
+            </form>
+          <% } else if (singleServer.status === 'suspended') { %>
+            <form action="/servers/<%= singleServer._id %>/unsuspend" method="POST">
+              <button type="submit" class="btn btn-success">
+                ▶️ Unsuspend
+              </button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+
+    <% } else { %>
+      <!-- ============================================================= -->
+      <!-- SERVERS LIST VIEW -->
+      <!-- ============================================================= -->
+
+      <div class="page-head">
+        <div>
+          <h1>My <span>Servers</span> 🖥️</h1>
+          <p>Servers zako zote zilizoundwa kutoka bots, plans au admin panels.</p>
+        </div>
+        <a href="/servers/buy" class="btn btn-primary">+ Buy Server</a>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filter-bar">
+        <a href="/servers" class="chip <%= filters.status === 'all' ? 'active' : '' %>">Zote</a>
+        <a href="/servers?status=active" class="chip <%= filters.status === 'active' ? 'active' : '' %>">Active</a>
+        <a href="/servers?status=suspended" class="chip <%= filters.status === 'suspended' ? 'active' : '' %>">Suspended</a>
+        <a href="/servers?status=creating" class="chip <%= filters.status === 'creating' ? 'active' : '' %>">Creating</a>
+        <a href="/servers?status=failed" class="chip <%= filters.status === 'failed' ? 'active' : '' %>">Failed</a>
+      </div>
+
+      <% if (servers && servers.length > 0) { %>
+        <div class="servers">
+          <% servers.forEach((s) => { %>
+            <div class="server-card">
+
+              <div class="server-top">
+                <div class="server-icon">
+                  <% if (s.bot && s.bot.image) { %>
+                    <img src="<%= s.bot.image %>" alt="<%= s.name %>" loading="lazy" />
+                  <% } else if (s.hostingPlan && s.hostingPlan.image) { %>
+                    <img src="<%= s.hostingPlan.image %>" alt="<%= s.name %>" loading="lazy" />
+                  <% } else { %>
+                    🖥️
+                  <% } %>
+                </div>
+                <div class="server-info">
+                  <div class="server-name"><%= s.name %></div>
+                  <div class="server-source"><%= s.source %></div>
+                </div>
+                <% if (s.status === 'active') { %>
+                  <span class="badge badge-success">Active</span>
+                <% } else if (s.status === 'suspended') { %>
+                  <span class="badge badge-pending">Suspended</span>
+                <% } else if (s.status === 'failed') { %>
+                  <span class="badge badge-failed">Failed</span>
+                <% } else if (s.status === 'creating') { %>
+                  <span class="badge badge-info">Creating</span>
+                <% } else { %>
+                  <span class="badge badge-neutral"><%= s.status %></span>
+                <% } %>
+              </div>
+
+              <div class="server-specs">
+                <span class="spec">💾 <%= s.ram %>MB</span>
+                <span class="spec">⚡ <%= s.cpu %>%</span>
+                <span class="spec">💿 <%= s.disk %>MB</span>
+                <span class="spec gold">🪙 <%= s.coinsSpent %></span>
+              </div>
+
+              <div class="server-footer">
+                <div class="server-meta">
+                  <%= new Date(s.createdAt).toLocaleDateString('sw-TZ', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                </div>
+                <a href="/servers/<%= s._id %>" class="btn btn-primary">Angalia →</a>
+              </div>
+
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty">
+          <div class="empty-icon">🖥️</div>
+          <h3>Hakuna servers</h3>
+          <p>
+            <% if (filters.status !== 'all') { %>
+              Hakuna servers za status "<%= filters.status %>".
+            <% } else { %>
+              Bado huja-deploy au kununua server yoyote.
+            <% } %>
+          </p>
+          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <a href="/bots" class="btn btn-ghost">Deploy Bot</a>
+            <a href="/servers/buy" class="btn btn-primary">Buy Server →</a>
+          </div>
+        </div>
+      <% } %>
+
+    <% } %>
+
+  </main>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // Copy to clipboard
+    function copyText(text, event) {
+      navigator.clipboard.writeText(text).then(() => {
+        const el = event.target;
+        const original = el.textContent.trim();
+        el.textContent = '✅ Copied!';
+        setTimeout(() => { el.textContent = original; }, 1200);
+      }).catch(() => {
+        alert('Imeshindwa kunakili. Tafadhali nakili manually: ' + text);
+      });
+    }
+
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) closeSidebar();
+    });
+  </script>
+</body>
+</html>
