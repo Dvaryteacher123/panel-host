@@ -1,0 +1,438 @@
+<!--
+  DVARY HOSTING
+  FILE: views/login.ejs
+  Login page
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(139, 92, 246, 0.2), transparent 45%),
+        radial-gradient(circle at 80% 85%, rgba(236, 72, 153, 0.15), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: var(--purple-2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ============== WRAPPER ============== */
+    .auth-wrap {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px 18px;
+    }
+
+    /* ============== CARD ============== */
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(139, 92, 246, 0.1);
+      animation: fadeUp 0.5s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============== LOGO ============== */
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 22px;
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1.15rem;
+      box-shadow: 0 0 22px rgba(139, 92, 246, 0.55);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.4px;
+    }
+
+    /* ============== HEADINGS ============== */
+    .auth-card h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .auth-card .subtitle {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-bottom: 26px;
+    }
+
+    /* ============== ALERTS ============== */
+    .alert {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+      border-left: 4px solid var(--purple);
+      background: rgba(139, 92, 246, 0.08);
+    }
+
+    .alert.error {
+      border-left-color: var(--red);
+      background: rgba(239, 68, 68, 0.08);
+      color: #fca5a5;
+    }
+
+    .alert.success {
+      border-left-color: var(--green);
+      background: rgba(16, 185, 129, 0.08);
+      color: #6ee7b7;
+    }
+
+    .alert ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .alert li { margin-bottom: 3px; }
+    .alert li:last-child { margin-bottom: 0; }
+
+    /* ============== FORM ============== */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 7px;
+      letter-spacing: 0.3px;
+    }
+
+    .input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(10, 6, 18, 0.6);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.92rem;
+      font-family: inherit;
+      transition: 0.25s;
+      outline: none;
+    }
+
+    .input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+      background: rgba(10, 6, 18, 0.85);
+    }
+
+    .input::placeholder { color: var(--text-mute); }
+
+    /* ============== PASSWORD TOGGLE ============== */
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap .toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--text-mute);
+      cursor: pointer;
+      font-size: 0.78rem;
+      padding: 4px 6px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .input-wrap .toggle:hover { color: var(--purple-2); }
+
+    /* ============== BUTTONS ============== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+      margin-top: 6px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(139, 92, 246, 0.55);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ============== FOOTER LINK ============== */
+    .auth-footer {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 0.87rem;
+      color: var(--text-dim);
+    }
+
+    .auth-footer a {
+      color: var(--purple-2);
+      font-weight: 600;
+    }
+
+    /* ============== TOASTS ============== */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 16px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+    }
+
+    .toast {
+      padding: 13px 16px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.88rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ============== LOADING SPINNER ============== */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-primary.loading .spinner { display: inline-block; }
+    .btn-primary.loading .btn-text { display: none; }
+
+    /* ============== RESPONSIVE ============== */
+    @media (min-width: 480px) {
+      .auth-card { padding: 40px 34px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============== TOASTS ============== -->
+  <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- ============== AUTH CARD ============== -->
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <a href="/" class="auth-logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+      </a>
+
+      <h1>Karibu Tena</h1>
+      <p class="subtitle">Ingia kwenye akaunti yako kuendelea</p>
+
+      <% if (errors && errors.length > 0) { %>
+        <div class="alert error">
+          <ul>
+            <% errors.forEach((err) => { %>
+              <li><%= err %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <form action="/auth/login" method="POST" id="loginForm">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="input"
+            placeholder="wewe@example.com"
+            value="<%= old && old.email ? old.email : '' %>"
+            required
+            autofocus
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="input"
+              placeholder="••••••••"
+              required
+              minlength="8"
+            />
+            <button type="button" class="toggle" onclick="togglePassword()">Onyesha</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <span class="btn-text">Ingia →</span>
+          <span class="spinner"></span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Hauna akaunti?
+        <a href="/auth/register">Jisajili hapa</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Toggle password visibility
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const btn = event.target;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = 'Ficha';
+      } else {
+        input.type = 'password';
+        btn.textContent = 'Onyesha';
+      }
+    }
+
+    // Loading state kwenye submit
+    document.getElementById('loginForm').addEventListener('submit', function () {
+      const btn = document.getElementById('submitBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+    });
+
+    // Auto-hide toasts
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+  </script>
+</body>
+</html>
