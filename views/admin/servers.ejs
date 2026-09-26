@@ -1,0 +1,1089 @@
+<!--
+  DVARY HOSTING
+  FILE: views/admin/servers.ejs
+  Admin - Servers management list with suspend/unsuspend/delete actions
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.2);
+      --border-soft: rgba(139, 92, 246, 0.12);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+      --sidebar-w: 260px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.1), transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============== TOPBAR ============== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 6, 18, 0.85);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .menu-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 1rem;
+    }
+
+    .menu-btn:hover {
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.4px;
+      display: none;
+    }
+
+    .admin-tag {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.35);
+      color: #f472b6;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 4px;
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .user-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 6px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--border);
+      transition: 0.25s;
+    }
+
+    .user-btn:hover { border-color: var(--purple); }
+
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .user-name { font-size: 0.83rem; font-weight: 700; display: none; }
+
+    /* ============== SIDEBAR ============== */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #0d0820 0%, #100a26 100%);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px 20px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .sidebar-logo .logo-mark { width: 36px; height: 36px; font-size: 1.05rem; }
+    .sidebar-logo .logo-text { display: block; font-weight: 800; font-size: 0.95rem; }
+
+    .sidebar-badge {
+      display: inline-block;
+      margin: 0 8px 12px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.15));
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      color: #f472b6;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      text-align: center;
+    }
+
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .nav-section {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 14px 10px 6px;
+      font-weight: 700;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: 0.2s;
+      position: relative;
+    }
+
+    .sidebar-link .icon { width: 20px; text-align: center; font-size: 1.05rem; }
+    .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); color: var(--purple-2); }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(236, 72, 153, 0.15));
+      color: #fff;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.2);
+    }
+
+    .sidebar-link.active::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      background: linear-gradient(180deg, var(--purple), var(--pink));
+      border-radius: 0 3px 3px 0;
+    }
+
+    .sidebar-footer { border-top: 1px solid var(--border-soft); padding-top: 10px; margin-top: 10px; }
+    .sidebar-footer .sidebar-link { color: #f87171; }
+    .sidebar-footer .sidebar-link:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+
+    /* ============== OVERLAY ============== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 150;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+    }
+
+    .overlay.show { opacity: 1; visibility: visible; }
+
+    /* ============== MAIN ============== */
+    .main {
+      position: relative;
+      z-index: 1;
+      padding: 20px 16px 40px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h1 {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .page-head h1 span {
+      background: linear-gradient(135deg, var(--purple-2), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .page-head p { color: var(--text-dim); font-size: 0.9rem; }
+
+    /* ============== FILTERS ============== */
+    .filters-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .filter-select {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(10, 6, 18, 0.6);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .filter-select:focus { border-color: var(--purple); }
+    .filter-select option { background: var(--card-2); color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.83rem;
+      border: none;
+      cursor: pointer;
+      transition: 0.25s;
+      font-family: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--purple-2);
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .btn-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .btn-warning:hover {
+      background: rgba(245, 158, 11, 0.25);
+      color: #fcd34d;
+    }
+
+    .btn-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-success:hover {
+      background: rgba(16, 185, 129, 0.25);
+      color: #6ee7b7;
+    }
+
+    .btn-danger-soft {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger-soft:hover {
+      background: rgba(239, 68, 68, 0.22);
+      color: #fca5a5;
+    }
+
+    .btn-sm {
+      padding: 7px 12px;
+      font-size: 0.76rem;
+    }
+
+    /* ============== RESULTS META ============== */
+    .results-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+    }
+
+    .results-meta strong { color: var(--purple-2); }
+
+    /* ============== SERVERS LIST ============== */
+    .servers-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .server-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      transition: 0.25s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .server-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 8px 22px rgba(139, 92, 246, 0.15);
+    }
+
+    .server-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .server-img {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1a0f38, #2a1560);
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      color: var(--purple-2);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid rgba(139, 92, 246, 0.25);
+    }
+
+    .server-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    .server-info { flex: 1; min-width: 0; }
+
+    .server-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .server-meta-line {
+      font-size: 0.75rem;
+      color: var(--text-mute);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .server-meta-line .sep { opacity: 0.5; }
+    .server-meta-line .user-link { color: var(--purple-2); font-weight: 700; }
+    .server-meta-line .user-link:hover { color: var(--pink); }
+    .server-meta-line .source-tag {
+      font-size: 0.66rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.12);
+      color: var(--purple-2);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .server-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-soft);
+      flex-wrap: wrap;
+    }
+
+    .server-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 0.76rem;
+      color: var(--text-mute);
+    }
+
+    .server-meta .specs {
+      font-weight: 700;
+      color: #67e8f9;
+      background: rgba(34, 211, 238, 0.1);
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(34, 211, 238, 0.2);
+    }
+
+    .server-meta .coins {
+      font-weight: 800;
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.1);
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    .server-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.66rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-suspended { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-failed { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-creating { background: rgba(34, 211, 238, 0.15); color: #67e8f9; border: 1px solid rgba(34, 211, 238, 0.3); }
+    .badge-deleted { background: rgba(139, 92, 246, 0.15); color: var(--purple-2); border: 1px solid rgba(139, 92, 246, 0.3); }
+
+    .error-text {
+      font-size: 0.72rem;
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.08);
+      border-left: 3px solid #ef4444;
+      padding: 5px 9px;
+      border-radius: 6px;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    /* ============== PAGINATION ============== */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .page-link {
+      padding: 8px 13px;
+      border-radius: 9px;
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .page-link:hover {
+      border-color: var(--purple);
+      color: var(--purple-2);
+      background: rgba(139, 92, 246, 0.15);
+    }
+
+    .page-link.active {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+    }
+
+    .page-info {
+      font-size: 0.8rem;
+      color: var(--text-mute);
+      width: 100%;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* ============== EMPTY ============== */
+    .empty {
+      text-align: center;
+      padding: 50px 20px;
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+    }
+
+    .empty-icon { font-size: 2.6rem; margin-bottom: 12px; opacity: 0.5; }
+    .empty h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .empty p { color: var(--text-dim); font-size: 0.88rem; }
+
+    /* ============== MODAL ============== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      max-width: 460px;
+      width: 100%;
+      padding: 24px;
+      animation: modalIn 0.3s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal h2 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: #f87171;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal p {
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .modal p strong { color: #fca5a5; }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-actions form { flex: 1; }
+    .modal-actions form button { width: 100%; }
+    .modal-actions button { flex: 1; }
+
+    /* ============== TOASTS ============== */
+    .toast-container {
+      position: fixed;
+      top: 74px;
+      right: 14px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 28px);
+    }
+
+    .toast {
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ============== RESPONSIVE ============== */
+    @media (min-width: 480px) {
+      .logo-text { display: block; }
+      .admin-tag { display: inline-flex; }
+      .user-name { display: block; }
+      .filter-select { flex: 0 1 auto; min-width: 160px; }
+      .servers-list { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 900px) {
+      .topbar { padding-left: calc(var(--sidebar-w) + 20px); }
+      .sidebar { transform: translateX(0); }
+      .menu-btn { display: none; }
+      .main { padding: 26px 30px 60px; margin-left: var(--sidebar-w); max-width: none; }
+      .overlay { display: none; }
+      .servers-list { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 1200px) {
+      .servers-list { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============== TOASTS ============== -->
+  <% if (success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (warning && warning.length > 0) { %>
+    <div class="toast-container">
+      <% warning.forEach((msg) => { %>
+        <div class="toast warning"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- ============== OVERLAY ============== -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">D</div>
+      <div class="logo-text">DVARY HOSTING</div>
+    </div>
+    <div class="sidebar-badge">🔑 Admin Panel</div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Usimamizi</div>
+
+      <a href="/admin/dashboard" class="sidebar-link">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a href="/admin/users" class="sidebar-link">
+        <span class="icon">👥</span> Users
+      </a>
+      <a href="/admin/bots" class="sidebar-link">
+        <span class="icon">🤖</span> Bots
+      </a>
+      <a href="/admin/deployments" class="sidebar-link">
+        <span class="icon">🚀</span> Deployments
+      </a>
+      <a href="/admin/servers" class="sidebar-link active">
+        <span class="icon">🖥️</span> Servers
+      </a>
+
+      <div class="nav-section">Bidhaa</div>
+
+      <a href="/admin/hosting-plans" class="sidebar-link">
+        <span class="icon">📦</span> Hosting Plans
+      </a>
+      <a href="/admin/admin-panels" class="sidebar-link">
+        <span class="icon">🛡️</span> Admin Panels
+      </a>
+
+      <div class="nav-section">Fedha</div>
+
+      <a href="/admin/transactions" class="sidebar-link">
+        <span class="icon">💰</span> Transactions
+      </a>
+
+      <div class="nav-section">Mfumo</div>
+
+      <a href="/admin/settings" class="sidebar-link">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="/dashboard" class="sidebar-link">
+        <span class="icon">👤</span> User View
+      </a>
+      <a href="/auth/logout" class="sidebar-link">
+        <span class="icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============== TOPBAR ============== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+      <div class="logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+        <span class="admin-tag">🔑 Admin</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <a href="/dashboard/profile" class="user-btn">
+        <div class="user-avatar"><%= user.username.charAt(0) %></div>
+        <span class="user-name"><%= user.username %></span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+
+    <div class="page-head">
+      <div>
+        <h1>Servers <span>Management</span> 🖥️</h1>
+        <p>Simamia servers zote zilizoundwa — suspend, unsuspend, au kufuta.</p>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <form class="filters-card" method="GET" action="/admin/servers">
+      <div class="filter-group">
+        <select name="status" class="filter-select">
+          <option value="" <%= !filters.status || filters.status === 'all' ? 'selected' : '' %>>Status: Zote</option>
+          <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
+          <option value="suspended" <%= filters.status === 'suspended' ? 'selected' : '' %>>Suspended</option>
+          <option value="creating" <%= filters.status === 'creating' ? 'selected' : '' %>>Creating</option>
+          <option value="failed" <%= filters.status === 'failed' ? 'selected' : '' %>>Failed</option>
+        </select>
+
+        <button type="submit" class="btn btn-primary">Chuja</button>
+        <a href="/admin/servers" class="btn btn-ghost">Reset</a>
+      </div>
+    </form>
+
+    <!-- RESULTS META -->
+    <div class="results-meta">
+      <div>Servers <strong><%= servers.length %></strong> zimepatikana</div>
+      <div>Jumla: <strong><%= pagination.total %></strong></div>
+    </div>
+
+    <!-- SERVERS LIST -->
+    <% if (servers && servers.length > 0) { %>
+      <div class="servers-list">
+        <% servers.forEach((s) => { %>
+          <div class="server-card">
+
+            <div class="server-main">
+              <div class="server-img">🖥️</div>
+              <div class="server-info">
+                <div class="server-name"><%= s.name %></div>
+                <div class="server-meta-line">
+                  <span>
+                    <% if (s.user) { %>
+                      <a href="/admin/users/<%= s.user._id %>" class="user-link"><%= s.user.username %></a>
+                    <% } else { %>
+                      unknown
+                    <% } %>
+                  </span>
+                  <span class="sep">•</span>
+                  <span class="source-tag"><%= s.source %></span>
+                </div>
+              </div>
+              <div>
+                <% if (s.status === 'active') { %>
+                  <span class="badge badge-active">Active</span>
+                <% } else if (s.status === 'suspended') { %>
+                  <span class="badge badge-suspended">Suspended</span>
+                <% } else if (s.status === 'creating') { %>
+                  <span class="badge badge-creating">Creating</span>
+                <% } else if (s.status === 'failed') { %>
+                  <span class="badge badge-failed">Failed</span>
+                <% } else if (s.status === 'deleted') { %>
+                  <span class="badge badge-deleted">Deleted</span>
+                <% } else { %>
+                  <span class="badge badge-deleted"><%= s.status %></span>
+                <% } %>
+              </div>
+            </div>
+
+            <% if (s.status === 'failed' && s.errorMessage) { %>
+              <div class="error-text">⚠️ <%= s.errorMessage %></div>
+            <% } %>
+
+            <div class="server-footer">
+              <div class="server-meta">
+                <span class="specs"><%= s.ram %>MB • <%= s.cpu %>% • <%= s.disk %>MB</span>
+                <span class="coins">🪙 <%= s.coinsSpent %></span>
+                <% if (s.pterodactylServerId) { %>
+                  <span style="font-family: monospace; font-size: 0.7rem;">
+                    #<%= s.pterodactylServerId %>
+                  </span>
+                <% } %>
+              </div>
+
+              <div class="server-actions">
+                <% if (s.status === 'active') { %>
+                  <form action="/admin/servers/<%= s._id %>/suspend" method="POST" style="display: inline;">
+                    <button
+                      type="submit"
+                      class="btn btn-warning btn-sm"
+                      onclick="return confirm('Una uhakika unataka kusimamisha server hii?');"
+                      <%= !s.pterodactylServerId ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' %>
+                    >
+                      ⏸️
+                    </button>
+                  </form>
+                <% } else if (s.status === 'suspended') { %>
+                  <form action="/admin/servers/<%= s._id %>/unsuspend" method="POST" style="display: inline;">
+                    <button
+                      type="submit"
+                      class="btn btn-success btn-sm"
+                      <%= !s.pterodactylServerId ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' %>
+                    >
+                      ▶️
+                    </button>
+                  </form>
+                <% } %>
+
+                <% if (s.status !== 'deleted') { %>
+                  <button
+                    type="button"
+                    class="btn btn-danger-soft btn-sm"
+                    onclick="openDeleteModal('<%= s._id %>', '<%= s.name.replace(/'/g, "\\'") %>')"
+                  >
+                    🗑️
+                  </button>
+                <% } %>
+              </div>
+            </div>
+
+          </div>
+        <% }); %>
+      </div>
+
+      <!-- PAGINATION -->
+      <% if (pagination.totalPages > 1) { %>
+        <div class="pagination">
+          <% if (pagination.hasPrev) { %>
+            <a
+              href="/admin/servers?page=<%= pagination.currentPage - 1 %><%= filters.status && filters.status !== 'all' ? '&status=' + filters.status : '' %>"
+              class="page-link"
+            >← Nyuma</a>
+          <% } %>
+
+          <span class="page-link active"><%= pagination.currentPage %> / <%= pagination.totalPages %></span>
+
+          <% if (pagination.hasNext) { %>
+            <a
+              href="/admin/servers?page=<%= pagination.currentPage + 1 %><%= filters.status && filters.status !== 'all' ? '&status=' + filters.status : '' %>"
+              class="page-link"
+            >Mbele →</a>
+          <% } %>
+
+          <div class="page-info">Ukurasa <%= pagination.currentPage %> kati ya <%= pagination.totalPages %></div>
+        </div>
+      <% } %>
+
+    <% } else { %>
+      <div class="empty">
+        <div class="empty-icon">🖥️</div>
+        <h3>Hakuna servers</h3>
+        <p>
+          <% if (filters.status && filters.status !== 'all') { %>
+            Hakuna servers za status "<%= filters.status %>".
+          <% } else { %>
+            Hakuna servers zilizoundwa bado.
+          <% } %>
+        </p>
+      </div>
+    <% } %>
+
+  </main>
+
+  <!-- ============== DELETE MODAL ============== -->
+  <div class="modal-backdrop" id="deleteModal">
+    <div class="modal">
+      <h2>⚠️ Futa Server</h2>
+      <p>
+        Una uhakika unataka kufuta server <strong id="deleteServerName">-</strong>?
+        Server itafutwa kwenye Pterodactyl na MongoDB. Hatua hii <strong>haiwezi kurudishwa</strong>.
+      </p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Ghairi</button>
+        <form action="" method="POST" id="deleteForm">
+          <button type="submit" class="btn btn-danger-soft">🗑️ Futa Server</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const deleteModal = document.getElementById('deleteModal');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    function openDeleteModal(serverId, serverName) {
+      document.getElementById('deleteServerName').textContent = serverName;
+      document.getElementById('deleteForm').action = '/admin/servers/' + serverId + '/delete';
+      deleteModal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+      deleteModal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) closeDeleteModal();
+    });
+
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) closeSidebar();
+    });
+  </script>
+</body>
+</html>
