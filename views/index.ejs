@@ -1,0 +1,773 @@
+<!--
+  DVARY HOSTING
+  FILE: views/index.ejs
+  Homepage (public)
+-->
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <meta name="description" content="DVARY HOSTING - Deploy bots, buy servers, na admin panels kwa coins." />
+  <style>
+    :root {
+      --bg: #0a0612;
+      --bg-2: #0f0a1f;
+      --card: #150d2b;
+      --card-2: #1b1138;
+      --border: rgba(139, 92, 246, 0.18);
+      --purple: #8b5cf6;
+      --purple-2: #a78bfa;
+      --pink: #ec4899;
+      --cyan: #22d3ee;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e7e3f5;
+      --text-dim: #a59fc2;
+      --text-mute: #6f6890;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.15), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(236, 72, 153, 0.12), transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.05), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============== NAVBAR ============== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 6, 18, 0.75);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.55);
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, var(--purple-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-links {
+      display: none;
+      gap: 22px;
+      font-size: 0.92rem;
+      color: var(--text-dim);
+    }
+
+    .nav-links a:hover { color: var(--purple-2); transition: 0.2s; }
+
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: #fff;
+      border-color: var(--purple);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(139, 92, 246, 0.55);
+    }
+
+    .btn-lg {
+      padding: 14px 28px;
+      font-size: 1rem;
+      border-radius: 12px;
+    }
+
+    /* ============== HERO ============== */
+    .hero {
+      position: relative;
+      z-index: 1;
+      padding: 70px 20px 50px;
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.12);
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      color: var(--purple-2);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      margin-bottom: 22px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero h1 {
+      font-size: clamp(1.9rem, 6vw, 3.6rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 .grad {
+      background: linear-gradient(135deg, var(--purple-2), var(--pink), var(--cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      max-width: 620px;
+      margin: 0 auto 32px;
+      color: var(--text-dim);
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ============== STATS ============== */
+    .stats {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 14px;
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+    }
+
+    .stat-num {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--purple-2), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-mute);
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ============== SECTIONS ============== */
+    .section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 20px 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-head {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .section-head h2 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .section-head p {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ============== FEATURE CARDS ============== */
+    .features {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--pink), var(--cyan));
+      opacity: 0;
+      transition: 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 12px 35px rgba(139, 92, 246, 0.18);
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ============== FEATURED BOTS ============== */
+    .bot-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .bot-card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bot-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(139, 92, 246, 0.55);
+      box-shadow: 0 15px 40px rgba(139, 92, 246, 0.22);
+    }
+
+    .bot-img {
+      height: 150px;
+      background: linear-gradient(135deg, #1a0f38, #2a1560);
+      display: grid;
+      place-items: center;
+      font-size: 2.4rem;
+      color: var(--purple-2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bot-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .bot-body {
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bot-cat {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--purple-2);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: fit-content;
+    }
+
+    .bot-name {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .bot-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .bot-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    .bot-price {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--purple-2);
+    }
+
+    .bot-price small { color: var(--text-mute); font-weight: 500; font-size: 0.72rem; }
+
+    /* ============== EMPTY STATE ============== */
+    .empty {
+      text-align: center;
+      padding: 48px 20px;
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+    }
+
+    .empty-icon {
+      font-size: 2.6rem;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+
+    .empty h3 {
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .empty p {
+      color: var(--text-dim);
+      font-size: 0.88rem;
+    }
+
+    /* ============== CTA ============== */
+    .cta {
+      max-width: 900px;
+      margin: 60px auto;
+      padding: 40px 24px;
+      text-align: center;
+      background: linear-gradient(160deg, rgba(139, 92, 246, 0.12), rgba(236, 72, 153, 0.08));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 20px;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .cta::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.15), transparent 60%);
+      animation: rotate 20s linear infinite;
+      z-index: -1;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .cta h2 {
+      font-size: clamp(1.3rem, 4vw, 1.9rem);
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .cta p {
+      color: var(--text-dim);
+      margin-bottom: 26px;
+      font-size: 0.95rem;
+    }
+
+    /* ============== FOOTER ============== */
+    footer {
+      position: relative;
+      z-index: 1;
+      margin-top: 60px;
+      padding: 28px 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-mute);
+      font-size: 0.82rem;
+    }
+
+    footer strong { color: var(--purple-2); }
+
+    /* ============== TOASTS ============== */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      right: 16px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+    }
+
+    .toast {
+      padding: 13px 16px;
+      border-radius: 12px;
+      background: var(--card-2);
+      border-left: 4px solid var(--purple);
+      color: var(--text);
+      font-size: 0.88rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      animation: slideIn 0.35s ease;
+    }
+
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ============== RESPONSIVE ============== */
+    @media (min-width: 640px) {
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .bot-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats { gap: 16px; padding: 20px 40px; }
+    }
+
+    @media (min-width: 900px) {
+      .nav-links { display: flex; }
+      .features { grid-template-columns: repeat(3, 1fr); }
+      .bot-grid { grid-template-columns: repeat(3, 1fr); }
+      .hero { padding: 90px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============== NAVBAR ============== -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="/" class="logo">
+        <div class="logo-mark">D</div>
+        <span class="logo-text">DVARY HOSTING</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="/bots">Deploy Bots</a>
+        <a href="/servers/buy">Buy Server</a>
+        <a href="/servers/admin-panels">Admin Panels</a>
+      </div>
+
+      <div class="nav-actions">
+        <% if (currentUser) { %>
+          <% if (isAdmin) { %>
+            <a href="/admin/dashboard" class="btn btn-ghost">Admin</a>
+          <% } %>
+          <a href="/dashboard" class="btn btn-primary">Dashboard</a>
+        <% } else { %>
+          <a href="/auth/login" class="btn btn-ghost">Ingia</a>
+          <a href="/auth/register" class="btn btn-primary">Jisajili</a>
+        <% } %>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============== TOASTS ============== -->
+  <% if (success && success.length > 0) { %>
+    <div class="toast-container">
+      <% success.forEach((msg) => { %>
+        <div class="toast success"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="toast-container">
+      <% error.forEach((msg) => { %>
+        <div class="toast error"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+  <% if (warning && warning.length > 0) { %>
+    <div class="toast-container">
+      <% warning.forEach((msg) => { %>
+        <div class="toast warning"><%= msg %></div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <!-- ============== HERO ============== -->
+  <section class="hero">
+    <div class="hero-badge">DVARY HOSTING • POWERED BY PTERODACTYL</div>
+    <h1>
+      Deploy bots, buy servers,<br />
+      <span class="grad">na admin panels</span> kwa coins.
+    </h1>
+    <p>
+      Jukwaa la kisasa la hosting na deployment. Chagua bot, plan au admin panel,
+      tumia coins zako, na mfumo unakupatia server papo hapo.
+    </p>
+    <div class="hero-actions">
+      <% if (currentUser) { %>
+        <a href="/bots" class="btn btn-primary btn-lg">Anza Deploy →</a>
+        <a href="/servers/buy" class="btn btn-ghost btn-lg">Buy Server</a>
+      <% } else { %>
+        <a href="/auth/register" class="btn btn-primary btn-lg">Anza Sasa →</a>
+        <a href="/auth/login" class="btn btn-ghost btn-lg">Ingia</a>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- ============== STATS ============== -->
+  <section class="stats">
+    <div class="stat-card">
+      <div class="stat-num"><%= stats.totalBots %></div>
+      <div class="stat-label">Bots Zinazopatikana</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num"><%= stats.totalPlans %></div>
+      <div class="stat-label">Hosting Plans</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num"><%= stats.totalPanels %></div>
+      <div class="stat-label">Admin Panels</div>
+    </div>
+  </section>
+
+  <!-- ============== FEATURES ============== -->
+  <section class="section">
+    <div class="section-head">
+      <h2>Kila Kitu Unachohitaji</h2>
+      <p>Jukwaa moja lenye bots, servers, na admin panels — vyote vinavyotumia coins zako.</p>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>Deploy Bots</h3>
+        <p>Chagua bot kutoka marketplace, tumia coins zako, na server yako inaundwa papo hapo kupitia Pterodactyl.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🖥️</div>
+        <h3>Buy Server</h3>
+        <p>Chagua hosting plan inayokufaa — RAM, CPU, disk — na upate server yako tayari kutumika mara moja.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>Admin Panels</h3>
+        <p>Pata admin panels tayari kwa ajili ya bot zako. Zote zinaongezwa na admin wa DVARY HOSTING.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== FEATURED BOTS ============== -->
+  <section class="section">
+    <div class="section-head">
+      <h2>Featured Bots</h2>
+      <p>Bots zilizochaguliwa na admin wa DVARY HOSTING.</p>
+    </div>
+
+    <% if (featuredBots && featuredBots.length > 0) { %>
+      <div class="bot-grid">
+        <% featuredBots.forEach((bot) => { %>
+          <div class="bot-card">
+            <div class="bot-img">
+              <% if (bot.image) { %>
+                <img src="<%= bot.image %>" alt="<%= bot.name %>" />
+              <% } else { %>
+                🤖
+              <% } %>
+            </div>
+            <div class="bot-body">
+              <span class="bot-cat"><%= bot.category %></span>
+              <h3 class="bot-name"><%= bot.name %></h3>
+              <p class="bot-desc"><%= bot.shortDescription || bot.description %></p>
+              <div class="bot-footer">
+                <div class="bot-price"><%= bot.price %> <small>coins</small></div>
+                <a href="/bots/<%= bot._id %>" class="btn btn-primary">Angalia</a>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        <h3>Hakuna bots bado</h3>
+        <p>Admin bado hajaongeza bots. Tafadhali angalia tena baadaye.</p>
+      </div>
+    <% } %>
+  </section>
+
+  <!-- ============== CTA ============== -->
+  <section class="cta">
+    <h2>Uko Tayari Kuanza?</h2>
+    <p>Jisajili bure, ongeza coins kupitia admin, na anza ku-deploy bots zako leo.</p>
+    <% if (currentUser) { %>
+      <a href="/bots" class="btn btn-primary btn-lg">Nenda kwa Bots →</a>
+    <% } else { %>
+      <a href="/auth/register" class="btn btn-primary btn-lg">Jisajili Bure →</a>
+    <% } %>
+  </section>
+
+  <!-- ============== FOOTER ============== -->
+  <footer>
+    <p>&copy; <%= new Date().getFullYear() %> <strong>DVARY HOSTING</strong> — Haki zote zimehifadhiwa.</p>
+  </footer>
+
+  <script>
+    // Auto-hide toasts baada ya sekunde 4
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach((el) => {
+        el.style.transition = 'opacity 0.4s, transform 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(40px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+  </script>
+</body>
+</html>
