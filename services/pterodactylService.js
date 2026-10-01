@@ -1,0 +1,412 @@
+/**
+ * DVARY HOSTING
+ * FILE: services/pterodactylService.js
+ *
+ * Service ya kufanya operations zote za Pterodactyl Application API.
+ *
+ * MUHIMU: Server inaundwa kwa HARDCODED values:
+ *   - Node ID: 1 (DEFAULT_NODE_ID)
+ *   - Allocation ID: 1 (DEFAULT_ALLOCATION_ID)
+ *   - RAM: 512 MB
+ *   - Disk: 1024 MB
+ *   - CPU: 100%
+ *
+ * Hii inaepuka kosa "No nodes satisfying the requirements" kwa kuweka
+ * node na allocation moja kwa moja kwenye payload.
+ */
+
+'use strict';
+
+const pterodactyl = require('../config/pterodactyl');
+const logger = require('../utils/logger');
+const { generatePassword, generateUsername } = require('../utils/generatePassword');
+
+// ============================
+// HARDCODED DEFAULTS
+// ============================
+const DEFAULT_NODE_ID = Number(process.env.PTERODACTYL_NODE_ID) || 1;
+const DEFAULT_ALLOCATION_ID = Number(process.env.PTERODACTYL_ALLOCATION_ID) || 1;
+const DEFAULT_RAM = Number(process.env.PTERODACTYL_DEFAULT_RAM) || 512;
+const DEFAULT_DISK = Number(process.env.PTERODACTYL_DEFAULT_DISK) || 1024;
+const DEFAULT_CPU = Number(process.env.PTERODACTYL_DEFAULT_CPU) || 100;
+
+// ============================
+// USERS
+// ============================
+
+async function findUserByEmail(email) {
+  try {
+    const response = await pterodactyl.get('/users', {
+      params: { 'filter[email]': email },
+    });
+    const users = response.data.data || [];
+    if (users.length === 0) {
+      logger.info(`Pterodactyl: user mwenye email ${email} haipo.`);
+      return null;
+    }
+    logger.info(`Pterodactyl: user ${email} amepatikana (ID=${users[0].attributes.id}).`);
+    return users[0].attributes;
+  } catch (err) {
+    logger.warn(`findUserByEmail filter method imefail: ${err.message}. Jaribio la pili...`);
+    try {
+      const response = await pterodactyl.get('/users', {
+        params: { per_page: 100 },
+      });
+      const users = response.data.data || [];
+      const found = users.find(
+        (u) => u.attributes.email.toLowerCase() === email.toLowerCase()
+      );
+      if (found) {
+        logger.info(`Pterodactyl: user ${email} amepatikana (ID=${found.attributes.id}).`);
+        return found.attributes;
+      }
+      return null;
+    } catch (err2) {
+      logger.error(`findUserByEmail (manual) error: ${err2.message}`);
+      return null;
+    }
+  }
+}
+
+async function getUser(userId) {
+  const response = await pterodactyl.get(`/users/${userId}`);
+  return response.data.attributes;
+}
+
+async function createUser(data) {
+  const { email, firstName = 'DVARY', lastName = 'User' } = data;
+
+  if (!email) {
+    const err = new Error('Email inahitajika kuunda Pterodactyl user.');
+    err.status = 400;
+    throw err;
+  }
+
+  const username = data.username || generateUsername(email.split('@')[0]);
+  const password = data.password || generatePassword(16);
+
+  const payload = {
+    email,
+    username,
+    first_name: firstName,
+    last_name: lastName,
+    password,
+  };
+
+  const response = await pterodactyl.post('/users', payload);
+  const attrs = response.data.attributes;
+
+  logger.info(`Pterodactyl user imeundwa: id=${attrs.id}, username=${username}`);
+
+  return {
+    id: attrs.id,
+    username: attrs.username,
+    email: attrs.email,
+    password,
+  };
+}
+
+async function ensureUser({ email, username, firstName, lastName }) {
+  const existing = await findUserByEmail(email);
+
+  if (existing) {
+    return {
+      id: existing.id,
+      username: existing.username,
+      email: existing.email,
+      created: false,
+    };
+  }
+
+  const created = await createUser({ email, username, firstName, lastName });
+
+  return {
+    id: created.id,
+    username: created.username,
+    email: created.email,
+    password: created.password,
+    created: true,
+  };
+}
+
+async function updateUser(userId, data) {
+  const response = await pterodactyl.patch(`/users/${userId}`, data);
+  return response.data.attributes;
+}
+
+async function deleteUser(userId) {
+  await pterodactyl.delete(`/users/${userId}`);
+  logger.info(`Pterodactyl user imefutwa: id=${userId}`);
+  return true;
+}
+
+// ============================
+// NODES (READ-ONLY, kwa admin settings)
+// ============================
+
+async function getNodes() {
+  try {
+    const response = await pterodactyl.get('/nodes');
+    return (response.data.data || []).map((n) => n.attributes);
+  } catch (err) {
+    logger.error(`getNodes error: ${err.message}`);
+    return [];
+  }
+}
+
+async function getAllocationsByNode(nodeId) {
+  try {
+    const response = await pterodactyl.get(`/nodes/${nodeId}/allocations`, {
+      params: { per_page: 100 },
+    });
+    return (response.data.data || []).map((a) => a.attributes);
+  } catch (err) {
+    logger.warn(`getAllocationsByNode(${nodeId}) error: ${err.message}`);
+    return [];
+  }
+}
+
+// ============================
+// SERVERS
+// ============================
+
+/**
+ * Unda server kwenye Pterodactyl kwa HARDCODED values.
+ *
+ * Payload ina:
+ *   - deploy.locations: [DEFAULT_NODE_ID]  → node 1
+ *   - allocation.default: DEFAULT_ALLOCATION_ID → allocation 1
+ *   - limits.memory: 512
+ *   - limits.disk: 1024
+ *   - limits.cpu: 100
+ */
+async function createServer(config) {
+  const {
+    name,
+    userId,
+    description = null,
+    // Resources (kama hazitolewa, tumia defaults)
+    ram = DEFAULT_RAM,
+    cpu = DEFAULT_CPU,
+    disk = DEFAULT_DISK,
+    // Pterodactyl config
+    nestId,
+    eggId,
+    dockerImage,
+    startupCommand,
+    environmentVariables = {},
+  } = config;
+
+  // Validation
+  const missing = [];
+  if (!name) missing.push('name');
+  if (!userId) missing.push('userId');
+  if (!nestId) missing.push('nestId');
+  if (!eggId) missing.push('eggId');
+  if (!dockerImage) missing.push('dockerImage');
+  if (!startupCommand) missing.push('startupCommand');
+
+  if (missing.length > 0) {
+    const err = new Error(`MISSING: ${missing.join(', ')} — hazipo kwenye config.`);
+    err.status = 400;
+    throw err;
+  }
+
+  // Environment variables
+  const env = {};
+  Object.keys(environmentVariables).forEach((key) => {
+    env[key] = String(environmentVariables[key]);
+  });
+
+  // ============================
+  // HARDCODED PAYLOAD
+  // ============================
+  const payload = {
+    name,
+    user: Number(userId),
+    description: description || null,
+    egg: Number(eggId),
+    docker_image: dockerImage,
+    startup: startupCommand,
+    environment: env,
+    limits: {
+      memory: 512,   // HARDCODED 512 MB
+      swap: 0,
+      disk: 1024,    // HARDCODED 1024 MB
+      io: 500,
+      cpu: 100,      // HARDCODED 100%
+    },
+    feature_limits: {
+      databases: 0,
+      allocations: 1,
+      backups: 0,
+    },
+    deploy: {
+      // HARDCODED: Node ID 1
+      locations: [1],
+      dedicated_ip: false,
+      port_range: [],
+    },
+    // HARDCODED: Allocation ID 1
+    allocation: {
+      default: 1,
+    },
+    start_on_completion: false,
+    skip_scripts: false,
+    oom_disabled: false,
+  };
+
+  logger.info(
+    `createServer HARDCODED: user=${userId}, egg=${eggId}, node=1, allocation=1, ram=512, disk=1024, cpu=100`
+  );
+  logger.info(`createServer payload: ${JSON.stringify(payload)}`);
+
+  try {
+    const response = await pterodactyl.post('/servers', payload);
+    const attrs = response.data.attributes;
+
+    logger.info(`Pterodactyl server imeundwa: id=${attrs.id}, identifier=${attrs.identifier}`);
+
+    return {
+      id: attrs.id,
+      identifier: attrs.identifier,
+      uuid: attrs.uuid,
+      name: attrs.name,
+      status: attrs.status,
+    };
+  } catch (err) {
+    if (err.pterodactyl) {
+      logger.error(`Pterodactyl createServer error: ${JSON.stringify(err.pterodactyl)}`);
+    }
+    throw err;
+  }
+}
+
+async function getServer(serverId) {
+  const response = await pterodactyl.get(`/servers/${serverId}`);
+  return response.data.attributes;
+}
+
+async function getServerByExternalId(externalId) {
+  const response = await pterodactyl.get(`/servers/external/${externalId}`);
+  return response.data.attributes;
+}
+
+async function updateServer(serverId, data) {
+  const response = await pterodactyl.patch(`/servers/${serverId}/details`, data);
+  return response.data.attributes;
+}
+
+async function updateServerBuild(serverId, data) {
+  const response = await pterodactyl.patch(`/servers/${serverId}/build`, data);
+  return response.data.attributes;
+}
+
+async function updateServerStartup(serverId, data) {
+  const response = await pterodactyl.patch(`/servers/${serverId}/startup`, data);
+  return response.data.attributes;
+}
+
+// ============================
+// SERVER ACTIONS
+// ============================
+
+async function suspendServer(serverId) {
+  await pterodactyl.post(`/servers/${serverId}/suspend`);
+  logger.info(`Pterodactyl server imesimamishwa: id=${serverId}`);
+  return true;
+}
+
+async function unsuspendServer(serverId) {
+  await pterodactyl.post(`/servers/${serverId}/unsuspend`);
+  logger.info(`Pterodactyl server imeanzishwa tena: id=${serverId}`);
+  return true;
+}
+
+async function reinstallServer(serverId) {
+  await pterodactyl.post(`/servers/${serverId}/reinstall`);
+  logger.info(`Pterodactyl server inareinstall: id=${serverId}`);
+  return true;
+}
+
+async function deleteServer(serverId) {
+  await pterodactyl.delete(`/servers/${serverId}`);
+  logger.info(`Pterodactyl server imefutwa: id=${serverId}`);
+  return true;
+}
+
+// ============================
+// NESTS & EGGS
+// ============================
+
+async function getNests() {
+  try {
+    const response = await pterodactyl.get('/nests');
+    return (response.data.data || []).map((n) => n.attributes);
+  } catch (err) {
+    logger.error(`getNests error: ${err.message}`);
+    return [];
+  }
+}
+
+async function getEggsByNest(nestId) {
+  const response = await pterodactyl.get(`/nests/${nestId}/eggs`);
+  return (response.data.data || []).map((e) => e.attributes);
+}
+
+// ============================
+// HEALTH
+// ============================
+
+async function healthCheck() {
+  try {
+    await pterodactyl.get('/nodes');
+    return true;
+  } catch (err) {
+    logger.error(`Pterodactyl health check imefail: ${err.message}`);
+    return false;
+  }
+}
+
+// ============================
+// EXPORTS
+// ============================
+module.exports = {
+  // Users
+  createUser,
+  getUser,
+  findUserByEmail,
+  ensureUser,
+  updateUser,
+  deleteUser,
+
+  // Nodes (read-only)
+  getNodes,
+  getAllocationsByNode,
+
+  // Servers
+  createServer,
+  getServer,
+  getServerByExternalId,
+  updateServer,
+  updateServerBuild,
+  updateServerStartup,
+
+  // Actions
+  suspendServer,
+  unsuspendServer,
+  reinstallServer,
+  deleteServer,
+
+  // Utilities
+  getNests,
+  getEggsByNest,
+  healthCheck,
+
+  // Hardcoded defaults
+  DEFAULT_NODE_ID,
+  DEFAULT_ALLOCATION_ID,
+  DEFAULT_RAM,
+  DEFAULT_DISK,
+  DEFAULT_CPU,
+};
